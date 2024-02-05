@@ -21,7 +21,7 @@ use App\Middleware\Auth;
 $app->get('/', 'App\Controller\DefaultController:getHelp');
 $app->get('/status', 'App\Controller\DefaultController:getStatus');
 $app->post('/login', "App\Controller\UserController:login");
-$app->get('/error',"App\Controller\UserController:handleError");
+$app->get('/error', "App\Controller\UserController:handleError");
 
 
 
@@ -36,27 +36,41 @@ $app->get('/error',"App\Controller\UserController:handleError");
 
 $app->group('/api/v1', function () use ($app): void {
     $app->group('/users', function () use ($app): void {
-        $app->get('', function(){});
-        $app->post('', function(){});
-        $app->get('/{id}', function(){});
-        $app->put('/{id}', function(){});
-        $app->delete('/{id}', function(){});
+        $app->get('', function () {
+        });
+        $app->post('', function () {
+        });
+        $app->get('/{id}', function () {
+        });
+        $app->put('/{id}', function () {
+        });
+        $app->delete('/{id}', function () {
+        });
     })->add(new Auth());
 
     $app->group('/profils', function () use ($app): void {
         $app->get('', "App\Controller\UserController:getUsers")->add(new Auth());
-        $app->post('',function(){});
-        $app->get('/{id}', function(){})->add(new Auth());
-        $app->put('/{id}', function(){})->add(new Auth());
-        $app->delete('/{id}', function(){})->add(new Auth());
+        $app->post('', function () {
+        });
+        $app->get('/{id}', function () {
+        })->add(new Auth());
+        $app->put('/{id}', function () {
+        })->add(new Auth());
+        $app->delete('/{id}', function () {
+        })->add(new Auth());
     });
 
     $app->group('/actions', function () use ($app): void {
-        $app->get('', function(){});
-        $app->post('', function(){});
-        $app->get('/{id}',function(){});
-        $app->put('/{id}', function(){});
-        $app->delete('/{id}',function(){});
+        $app->get('', function () {
+        });
+        $app->post('', function () {
+        });
+        $app->get('/{id}', function () {
+        });
+        $app->put('/{id}', function () {
+        });
+        $app->delete('/{id}', function () {
+        });
     });
 });
 
@@ -72,60 +86,83 @@ $app->group('/api/v1', function () use ($app): void {
 $app->group('/v1/admin', function () use ($app): void {
     $app->group('/actions', function () use ($app): void {
         $app->get('', "App\Admin\Controller\ActionController:getAll");
-        $app->post('',"App\Admin\Controller\ActionController:add");
+        $app->post('', "App\Admin\Controller\ActionController:add");
         $app->get('/{id}', "App\Admin\Controller\ActionController:getOne");
         $app->put('/{id}', "App\Admin\Controller\ActionController:update");
         $app->delete('/{id}', "App\Admin\Controller\ActionController:delete");
-    }); 
-
+    });
     $app->group('/profils', function () use ($app): void {
-        $app->get('', "App\Controller\UserController:getUsers");
-        $app->post('',function(){});
-        $app->get('/{id}', function(){})->add(new Auth());
-        $app->put('/{id}', function(){})->add(new Auth());
-        $app->delete('/{id}', function(){})->add(new Auth());
+        $app->group('/actions', function () use ($app): void {
+            $app->get('/{id}', "App\Admin\Controller\ProfilController:getProfilActions");
+            $app->post('/{id}', "App\Admin\Controller\ProfilController:addActions");
+            $app->delete('/{id}', "App\Admin\Controller\ProfilController:deleteActions");
+        });
+        $app->get('', "App\Admin\Controller\ProfilController:getAll");
+        $app->post('', "App\Admin\Controller\ProfilController:add");
+        $app->get('/{id}', "App\Admin\Controller\ProfilController:getOne");
+        $app->put('/{id}', "App\Admin\Controller\ProfilController:update");
+        $app->delete('/{id}', "App\Admin\Controller\ProfilController:delete");
     });
 
     $app->group('/users', function () use ($app): void {
-        $app->get('', function(){});
-        $app->post('', function(){});
-        $app->get('/{id}', function(){});
-        $app->put('/{id}', function(){});
-        $app->delete('/{id}', function(){});
+        $app->get('', function () {
+        });
+        $app->post('', function () {
+        });
+        $app->get('/{id}', function () {
+        });
+        $app->put('/{id}', function () {
+        });
+        $app->delete('/{id}', function () {
+        });
     });
 
-   
+
     $app->group('/groupe_pharmacie_garde', function () use ($app): void {
         $app->get('', "App\Controller\UserController:getUsers");
-        $app->post('',function(){});
-        $app->get('/{id}', function(){})->add(new Auth());
-        $app->put('/{id}', function(){})->add(new Auth());
-        $app->delete('/{id}', function(){})->add(new Auth());
+        $app->post('', function () {
+        });
+        $app->get('/{id}', function () {
+        })->add(new Auth());
+        $app->put('/{id}', function () {
+        })->add(new Auth());
+        $app->delete('/{id}', function () {
+        })->add(new Auth());
     });
-    
-    
+
+
     $app->group('/pharmacies', function () use ($app): void {
-        $app->get('', get_class(new PharmacieController).':findAll');
+        $app->get('', get_class(new PharmacieController) . ':findAll');
         $app->post('', "App\Controller\PharmacieController:insert");
-        $app->get('/{id}',function(){});
-        $app->put('/{id}', function(){});
-        $app->delete('/{id}',function(){});
+        $app->get('/{id}', function () {
+        });
+        $app->put('/{id}', function () {
+        });
+        $app->delete('/{id}', function () {
+        });
     });
 
     $app->group('/categories_prodduits', function () use ($app): void {
         $app->get('', "App\Controller\UserController:getUsers");
-        $app->post('',function(){});
-        $app->get('/{id}', function(){})->add(new Auth());
-        $app->put('/{id}', function(){})->add(new Auth());
-        $app->delete('/{id}', function(){})->add(new Auth());
+        $app->post('', function () {
+        });
+        $app->get('/{id}', function () {
+        })->add(new Auth());
+        $app->put('/{id}', function () {
+        })->add(new Auth());
+        $app->delete('/{id}', function () {
+        })->add(new Auth());
     });
 
     $app->group('/produits', function () use ($app): void {
         $app->get('', "App\Controller\UserController:getUsers");
-        $app->post('',function(){});
-        $app->get('/{id}', function(){})->add(new Auth());
-        $app->put('/{id}', function(){})->add(new Auth());
-        $app->delete('/{id}', function(){})->add(new Auth());
+        $app->post('', function () {
+        });
+        $app->get('/{id}', function () {
+        })->add(new Auth());
+        $app->put('/{id}', function () {
+        })->add(new Auth());
+        $app->delete('/{id}', function () {
+        })->add(new Auth());
     });
 });
-

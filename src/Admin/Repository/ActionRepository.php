@@ -41,9 +41,13 @@ class ActionRepository  extends BaseRepository
     public function update($id, $params, $crietre = '')
     {
         try {
+            $action = $this->getOne($id);
             $params["level"] = 1;
             $params["id"] = $id;
-            $params["description"] =  $params["description"] ?? "";
+            $params["description"] =  $params["description"] ?? $action["description"];
+            $params["libelle"] =  $params["libelle"] ?? $action["libelle"];
+            $params["methode"] =  $params["methode"] ?? $action["methode"];
+            $params["url"] =  $params["url"] ?? $action["url"];
             $QUERY = "UPDATE actions 
                     SET libelle_action=:libelle,
                     description_action=:description, 
@@ -89,7 +93,7 @@ class ActionRepository  extends BaseRepository
         FROM actions WHERE id_action=$id AND $critere";
         $action = $this->database->query($QUERY)->fetch(PDO::FETCH_ASSOC);
         if (empty($action)) {
-            throw new ActionException("Action non trouvé", 404);
+            throw new ActionException("Action non trouvée", 404);
         }
         return $action;
     }

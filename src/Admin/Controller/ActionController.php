@@ -11,8 +11,8 @@ use Slim\Http\Response;
 
 class ActionController extends BaseController
 {
-    
-    protected $metodes = ["get","post","put","delete"];
+
+    protected $methodes = ["get", "post", "put", "delete"];
     public function add(Request $request, Response $response): Response
     {
         $params  = $request->getParsedBody();
@@ -22,13 +22,13 @@ class ActionController extends BaseController
         return $this->jsonResponseWithData($response, "success", "Action ajoutée avec succès", $action, 201);
     }
 
-    public function update(Request $request, Response $response,array $args): Response
+    public function update(Request $request, Response $response, array $args): Response
     {
         $id = $args["id"];
         $params  = $request->getParsedBody();
-        $this->validate($params);
+        $this->validateUpdate($params);
         $repository = new ActionRepository;
-        $action = $repository->update($id,$params);
+        $action = $repository->update($id, $params);
         return $this->jsonResponseWithData($response, "success", "Action modifiée avec succès", $action, 200);
     }
 
@@ -38,74 +38,94 @@ class ActionController extends BaseController
         $queryParams = $request->getQueryParams();
         $repository = new ActionRepository;
         $critere = "true ";
-        if(isset($queryParams["id"]) && !empty($queryParams["id"])){
+        if (isset($queryParams["id"]) && !empty($queryParams["id"])) {
             $id = $queryParams["id"];
             $critere .= " AND id_action='$id'";
         }
-        if(isset($queryParams["libelle"]) && !empty($queryParams["libelle"])){
+        if (isset($queryParams["libelle"]) && !empty($queryParams["libelle"])) {
             $libelle = strtolower($queryParams["libelle"]);
             $critere .= " AND LOWER(libelle_action) LIKE '%$libelle%'";
         }
 
-        if(isset($queryParams["url"]) && !empty($queryParams["url"])){
+        if (isset($queryParams["url"]) && !empty($queryParams["url"])) {
             $url = strtolower($queryParams["url"]);
             $critere .= " AND LOWER(url_action) LIKE '%$url$'";
         }
 
-        if(isset($queryParams["methode"]) && !empty($queryParams["methode"])){
+        if (isset($queryParams["methode"]) && !empty($queryParams["methode"])) {
             $methode = strtolower($queryParams["methode"]);
             $critere .= " AND LOWER(methode) LIKE '%$methode%'";
         }
-        if(isset($queryParams["description"]) && !empty($queryParams["description"])){
+        if (isset($queryParams["description"]) && !empty($queryParams["description"])) {
             $description = strtolower($queryParams["description"]);
             $critere .= " AND LOWER(description_action) LIKE '%$description%'";
         }
-        if(isset($queryParams["perPage"]) && !empty($queryParams["perPage"])){
+        if (isset($queryParams["perPage"]) && !empty($queryParams["perPage"])) {
             $perPage = (int)$queryParams["perPage"];
-        }else{
+        } else {
             $perPage = 10;
         }
 
-        if(isset($queryParams["page"]) && !empty($queryParams["page"])){
+        if (isset($queryParams["page"]) && !empty($queryParams["page"])) {
             $page = (int)$queryParams["page"];
-        }else{
+        } else {
             $page = 1;
         }
-        $actions = $repository->getAll($critere,$page,$perPage);
-        return $this->jsonResponseWithoutMessage($response,'success', $actions,200);
+        $actions = $repository->getAll($critere, $page, $perPage);
+        return $this->jsonResponseWithoutMessage($response, 'success', $actions, 200);
     }
 
-    public function getOne(Request $request, Response $response, array $args): Response{
+    public function getOne(Request $request, Response $response, array $args): Response
+    {
         $id = $args["id"];
         $action = (new ActionRepository)->getOne($id);
-        return $this->jsonResponseWithoutMessage($response,'success', $action,200);
+        return $this->jsonResponseWithoutMessage($response, 'success', $action, 200);
     }
 
-    public function delete(Request $request, Response $response,array $args): Response{
+    public function delete(Request $request, Response $response, array $args): Response
+    {
         $id = $args['id'];
         (new ActionRepository)->delete($id);
-        return $this->jsonResponse($response,'success', "Action supprimée avec succès",200);
+        return $this->jsonResponse($response, 'success', "Action supprimée avec succès", 200);
     }
 
-    protected function checkMethod(string $method){
-        if(!in_array($method,$this->metodes)){
-            throw new ActionException('Methode doit être une de: '.join('|',$this->metodes));
+    protected function checkMethod(string $method)
+    {
+        if (!in_array($method, $this->methodes)) {
+            throw new ActionException('Methode doit être une de: ' . join('|', $this->methodes));
         }
     }
 
-    protected function checkUrl(string $url){
-        if(!is_int(strpos($url,'/'))){
+    protected function checkUrl(string $url)
+    {
+        if (!is_int(strpos($url, '/'))) {
             throw new ActionException('url doit comporter au moins un /');
         }
     }
 
-    private function validate($params){
+    private function validate($params)
+    {
         $this->required($params, "libelle", new ActionException("libelle est obligatoire"));
         $this->required($params, "url", new ActionException("url est obligatoire"));
         $this->required($params, "methode", new ActionException("methode est obligatoire"));
-        if(strlen($params["libelle"])<3) new ActionException("libelle doit comporter au moins 3 lettres");
-        if(strlen($params["url"])<3) new ActionException("url doit comporter au moins 3 lettres");
-        if(strlen($params["methode"])<3) new ActionException("methode doit comporter au moins 3 lettres");
+        if (strlen($params["libelle"]) < 3) throw new ActionException("libelle doit comporter au moins 3 lettres");
+        if (strlen($params["url"]) < 3) throw new ActionException("url doit comporter au moins 3 lettres");
+        if (strlen($params["methode"]) < 3) throw new ActionException("methode doit comporter au moins 3 lettres");
         $this->checkMethod($params["methode"]);
+    }
+
+
+    private function validateUpdate($params)
+    {
+        if (isset($params["libelle"]) && !is_null($params["libelle"])) {
+            if (strlen($params["libelle"]) < 3) throw new ActionException("libelle doit comporter au moins 3 lettres");
+        }
+        if (isset($params["url"]) && !is_null($params["url"])){
+            if (strlen($params["url"]) < 3) throw new ActionException("url doit comporter au moins 3 lettres");
+        }
+        if (isset($params["methode"]) && !is_null($params["methode"])){
+            if (strlen($params["methode"]) < 3) throw new ActionException("methode doit comporter au moins 3 lettres");
+        }
+        if (isset($params["methode"])) $this->checkMethod($params["methode"]);
     }
 }
