@@ -4,6 +4,6 @@ declare(strict_types=1);
 
 namespace App\Exception;
 
-final class Task extends Base
+final class PharmacieException extends Base
 {
 }

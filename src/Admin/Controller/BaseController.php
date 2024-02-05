@@ -2,9 +2,11 @@
 
 declare(strict_types=1);
 
-namespace App\Controller;
+namespace App\Admin\Controller;
 
 use App\Repository\BaseRepository;
+use Exception;
+use Respect\Validation\Validator;
 use Slim\Container;
 use Slim\Http\Response;
 
@@ -19,7 +21,7 @@ abstract class BaseController
     }
 
     /**
-     * @param array|object|null $message
+     * @param array|object|string|null $message
      */
     protected function jsonResponse(
         Response $response,
@@ -36,7 +38,7 @@ abstract class BaseController
         return $response->withJson($result, $code, JSON_PRETTY_PRINT);
     }
     /**
-     * @param array|object|null $message
+     * @param array|object|string|null $message
      */
     protected function jsonResponseWithData(
         Response $response,
@@ -77,6 +79,26 @@ abstract class BaseController
     {
         return filter_var($_SERVER['REDIS_ENABLED'], FILTER_VALIDATE_BOOLEAN);
     }
-
     
+
+    protected function required($params=[], $key="", Exception $exception){
+        if (empty($params)) {
+            throw new Exception("Veuillez renseigner les paramètres obligatoires.");
+        }
+
+        if(!array_key_exists($key, $params)){
+            throw $exception;
+        }
+    }
+
+    protected function validateEmail(string $email, Exception $exception): string {
+        $email = filter_var($email, FILTER_SANITIZE_EMAIL);
+        if (!Validator::email()->validate($email)) {
+            throw new \App\Exception\User('Invalid email', 400);
+        }
+        return (string) $email;
+    }
+   
+    
+
 }

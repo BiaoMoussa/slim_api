@@ -2,10 +2,12 @@
 
 declare(strict_types=1);
 
-namespace App\Controller;
+namespace App\Admin\Controller;
 
+use App\Admin\Repository\UserRepository;
 use App\Exception\User as ExceptionUser;
-use App\Repository\UserRepository;
+
+
 use Slim\Http\Request;
 use Slim\Http\Response;
 use Firebase\JWT\JWT;

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Repository;
+namespace App\Admin\Repository;
 
 
 use App\Exception\User as ExceptionUser;
@@ -49,7 +49,7 @@ class UserRepository extends BaseRepository
     public function delete($id,$crietre="") {
     }
 
-    public function getAll( $crietre= '') {
+    public function getAll( $crietre= '',$page=1, $perPage= 10) {
         if (!empty($params)) {
             $critere = "";
             if (isset($params["id"]) && is_numeric($params["id"])) {
@@ -75,5 +75,9 @@ class UserRepository extends BaseRepository
     }
 
     public function getOne($id, $crietre = ''){
+    }
+
+    public function exists($critere = 'true') : bool{
+        return false;
     }
 }

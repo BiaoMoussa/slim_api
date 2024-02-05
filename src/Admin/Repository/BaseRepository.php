@@ -2,12 +2,13 @@
 
 declare(strict_types=1);
 
-namespace App\Repository;
+namespace App\Admin\Repository;
+
+use PDO;
 
 abstract class BaseRepository
 {
-    protected \PDO $database;
-
+    protected PDO $database;
     
     public function __construct()
     {
@@ -15,7 +16,7 @@ abstract class BaseRepository
         $this->database = $GLOBALS["pdo"];
     }
 
-    protected function getDb(): \PDO
+    protected function getDb(): PDO
     {
         return $this->database;
     }
@@ -23,10 +24,10 @@ abstract class BaseRepository
     protected function getResultsWithPagination(
         string $query,
         int $page,
-        int $perPage,
-        array $params,
-        int $total
+        int $perPage
     ): array {
+        $total  = $this->database->query($query)->rowCount();
+        
         return [
             'pagination' => [
                 'totalRows' => $total,
@@ -34,27 +35,24 @@ abstract class BaseRepository
                 'currentPage' => $page,
                 'perPage' => $perPage,
             ],
-            'data' => $this->getResultByPage($query, $page, $perPage, $params),
+            'content' => $this->getResultByPage($query, $page, $perPage),
         ];
     }
 
     protected function getResultByPage(
         string $query,
         int $page,
-        int $perPage,
-        array $params
+        int $perPage
     ): array {
         $offset = ($page - 1) * $perPage;
-        $query .= " LIMIT ${perPage} OFFSET ${offset}";
-        $statement = $this->database->prepare($query);
-        $statement->execute($params);
-
-        return (array) $statement->fetchAll();
+        $query .= " LIMIT $perPage OFFSET $offset";
+        return  $this->database->query($query)->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    abstract protected function getAll($crietre="");
-    abstract protected function getOne($id,$crietre="");
+    abstract protected function getAll($critere="true", $page=1, $perPage= 10);
+    abstract protected function getOne($id,$critere="true");
     abstract protected function insert($params=[]);
-    abstract protected function update($id, $params, $crietre="");
-    abstract protected function delete($id, $crietre="");
+    abstract protected function update($id, $params, $critere="true");
+    abstract protected function delete($id, $critere="true");
+    abstract protected function exists($critere="true"):bool;
 }
