@@ -3,22 +3,7 @@ declare(strict_types=1);
 use App\Handler\ApiError;
 
 $errorHandler = function ($c) {
-    return function ($request, $response, $exception) use ($c) {
-        $statusCode = (new ApiError)->getStatusCode($exception);
-        $className = new \ReflectionClass(get_class($exception));
-        $data = [
-            'message' => $exception->getMessage(),
-            'class' => $className->getName(),
-            'status' => 'error',
-            'code' => $statusCode,
-        ];
-        $body = json_encode($data, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
-        $response->getBody()->write((string) $body);
-
-        return $response
-            ->withStatus($statusCode)
-            ->withHeader('Content-type', 'application/json+problem');
-    };
+    return new ApiError;
 };
 $settings = [
     'settings' => [

@@ -11,14 +11,18 @@ use Slim\Container;
 final class ApiError extends \Slim\Handlers\Error
 {
 
-    private function handle(
+    public function __invoke(
         Request $request,
         Response $response,
         \Exception $exception
     ): Response {
         $statusCode = $this->getStatusCode($exception);
         $className = new \ReflectionClass(get_class($exception));
-        $data = [
+        $data = ($_SERVER["DISPLAY_ERROR_DETAILS_JSON_WITOUT_CLASS_PATH"]=='true') ?[
+            'message' => $exception->getMessage(),
+            'status' => 'error',
+            'code' => $statusCode,
+        ]:[
             'message' => $exception->getMessage(),
             'class' => $className->getName(),
             'status' => 'error',
