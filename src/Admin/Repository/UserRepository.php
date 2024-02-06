@@ -20,7 +20,7 @@ class UserRepository extends BaseRepository
         $login = trim(strtolower($params["login"]));
         $password = $params["password"];
         $query = "SELECT id_user as id, nom_user as nom, prenom_user as prenom, 
-        login ,id_profil as profil, password FROM users WHERE LOWER(login)=:login";
+        login ,id_profil as profil, password, id_pharmacie as pharmacie FROM users WHERE LOWER(login)=:login";
         $statement = $this->database->prepare($query);
         $statement->bindParam('login', $login);
         $statement->execute();
@@ -38,6 +38,7 @@ class UserRepository extends BaseRepository
                 400
             );
         }
+        unset($user['password']);
         $idProfil = $user['profil'];
         $actions = $this->database->query("SELECT url_action as url, methode 
                                     FROM actions WHERE id_action IN (SELECT id_action FROM profil_has_actions WHERE id_profil='$idProfil')")

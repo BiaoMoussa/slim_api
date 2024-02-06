@@ -105,7 +105,7 @@ $app->group('/v1/admin', function () use ($app): void {
     });
 
     $app->group('/users', function () use ($app): void {
-        $app->get('', "App\Admin\Controller\UserController:getAll");
+        $app->get('', "App\Admin\Controller\UserController:getAll")->add(new Auth);
         $app->post('', "App\Admin\Controller\UserController:add");
         $app->post('/resetPassword/{id}', "App\Admin\Controller\UserController:resetPassword");
         $app->get('/{id}',"App\Admin\Controller\UserController:getOne");

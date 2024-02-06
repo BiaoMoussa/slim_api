@@ -39,11 +39,11 @@ class UserController extends BaseController
         $token = [
             'user' => $user,
             'iat' => time(),
-            'exp' => (int)$_SERVER['TOKEN_EXPIRE'] * 60,
+            'exp' => time() + (int)$_SERVER["TOKEN_EXPIRE"]*60,
         ];
 
-        $token =  JWT::encode($token, $_SERVER['SECRET_KEY']);
-        $message = ['Authorization' => 'Bearer ' . $token];
+        $token =  JWT::encode($token, $_SERVER['SECRET_KEY'],"HS512");
+        $message = ['Authorization' =>  $token, "expires"=>(int)$_SERVER["TOKEN_EXPIRE"]*60];
 
         return $this->jsonResponse($response, 'succes', $message, 200);
     }

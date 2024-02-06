@@ -6,11 +6,12 @@ namespace App\Handler;
 
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
+use Slim\Container;
 
 final class ApiError extends \Slim\Handlers\Error
 {
 
-    public function __invoke(
+    private function handle(
         Request $request,
         Response $response,
         \Exception $exception
@@ -28,10 +29,9 @@ final class ApiError extends \Slim\Handlers\Error
 
         return $response
             ->withStatus($statusCode)
-            ->withHeader('Content-type', 'application/problem+json');
+            ->withHeader('Content-type', 'application/json');
     }
-
-    private function getStatusCode(\Exception $exception): int
+    public function getStatusCode(\Exception $exception): int
     {
         $statusCode = 500;
         if (is_int($exception->getCode()) &&

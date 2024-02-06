@@ -12,11 +12,9 @@ abstract class Base
     protected function checkToken(string $token): object
     {
         try {
-            
-            return JWT::decode($token, $_SERVER['SECRET_KEY'], ['HS256']);
-            
+            return JWT::decode($token, $_SERVER['SECRET_KEY'], ['HS512']);
         } catch (\UnexpectedValueException $exception) {
-            throw new Auth('Forbidden: you are not authorized.', 403);
+            throw new Auth('Forbidden: Accès interdit à cette url.', 403);
         }
     }
 }
