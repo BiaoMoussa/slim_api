@@ -20,7 +20,7 @@ use App\Middleware\Auth;
 
 $app->get('/', 'App\Controller\DefaultController:getHelp');
 $app->get('/status', 'App\Controller\DefaultController:getStatus');
-$app->post('/login', "App\Controller\UserController:login");
+$app->post('/v1/login', "App\Admin\Controller\UserController:login");
 $app->get('/error', "App\Controller\UserController:handleError");
 
 
@@ -105,16 +105,13 @@ $app->group('/v1/admin', function () use ($app): void {
     });
 
     $app->group('/users', function () use ($app): void {
-        $app->get('', function () {
-        });
-        $app->post('', function () {
-        });
-        $app->get('/{id}', function () {
-        });
-        $app->put('/{id}', function () {
-        });
-        $app->delete('/{id}', function () {
-        });
+        $app->get('', "App\Admin\Controller\UserController:getAll");
+        $app->post('', "App\Admin\Controller\UserController:add");
+        $app->post('/resetPassword/{id}', "App\Admin\Controller\UserController:resetPassword");
+        $app->get('/{id}',"App\Admin\Controller\UserController:getOne");
+        $app->put('/{id}', "App\Admin\Controller\UserController:update");
+        $app->post('/changePassword', "App\Admin\Controller\UserController:changePassword");
+        $app->delete('/{id}', "App\Admin\Controller\UserController:delete");
     });
 
 
