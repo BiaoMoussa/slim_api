@@ -158,15 +158,13 @@ $app->group('/v1/admin', function () use ($app): void {
         $app->put('/setStatus/{id}', "App\Admin\Controller\GroupeGardeController:setStatus");
         $app->delete('/{id}', "App\Admin\Controller\GroupeGardeController:delete");
     })->add(new Auth);
+
+
     $app->group('/produits', function () use ($app): void {
-        $app->get('', "App\Controller\UserController:getUsers");
-        $app->post('', function () {
-        });
-        $app->get('/{id}', function () {
-        })->add(new Auth());
-        $app->put('/{id}', function () {
-        })->add(new Auth());
-        $app->delete('/{id}', function () {
-        })->add(new Auth());
-    });
+        $app->get('', "App\Admin\Controller\ProduitController:getAll");
+        $app->post('', "App\Admin\Controller\ProduitController:add");
+        $app->get('/{id}',"App\Admin\Controller\ProduitController:getOne");
+        $app->put('/{id}', "App\Admin\Controller\ProduitController:update");
+        $app->delete('/{id}', "App\Admin\Controller\ProduitController:delete");
+    })->add(new Auth());
 });

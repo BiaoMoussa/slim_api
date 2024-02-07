@@ -19,7 +19,7 @@ class CategorieController extends BaseController
     public function getAll(Request $request, Response $response): Response
     {
         $queryParams = (array)$request->getQueryParams();
-        $userRepository = new CategorieRepository;
+        $categorieRepository = new CategorieRepository;
         $critere = " true ";
         if (isset($queryParams["id"]) && !is_null($queryParams["id"])) {
             $idCategorie = $queryParams["id"];
@@ -50,7 +50,7 @@ class CategorieController extends BaseController
             $page = 1;
         }
 
-        $encodeJson = $userRepository->getAll($critere, $page, $perPage);
+        $encodeJson = $categorieRepository->getAll($critere, $page, $perPage);
 
         return $this->jsonResponseWithoutMessage($response, 'success', $encodeJson, 200);
     }
