@@ -44,6 +44,12 @@ class ProfilRepository  extends BaseRepository
             $params["level"] = 1;
             $params["id"] = $id;
             $params["libelle"] = isset($params["libelle"]) ? $params["libelle"] : $profil["libelle"];
+            $libelle_profil = $params["libelle"];
+            if ($libelle_profil != $profil["libelle"]) {
+                if ($this->exists("LOWER(libelle_profil)='$libelle_profil' AND level='1'")) {
+                    throw new ActionException("Cette action existe déjà !");
+                }
+            }
 
             $QUERY = "UPDATE profils 
                     SET libelle_profil=:libelle,
@@ -95,7 +101,7 @@ class ProfilRepository  extends BaseRepository
             $QUERY = "UPDATE profils 
                     SET statut=:status
                     WHERE id_profil=:id";
-            $this->database->prepare($QUERY)->execute(["status"=>$status, "id"=>(int)$id]);
+            $this->database->prepare($QUERY)->execute(["status" => $status, "id" => (int)$id]);
             return $this->getOne($id);
         } catch (ActionException $exception) {
             throw $exception;
