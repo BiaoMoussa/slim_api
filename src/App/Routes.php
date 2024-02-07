@@ -130,15 +130,13 @@ $app->group('/v1/admin', function () use ($app): void {
 
 
     $app->group('/pharmacies', function () use ($app): void {
-        $app->get('', get_class(new PharmacieController) . ':findAll');
-        $app->post('', "App\Controller\PharmacieController:insert");
-        $app->get('/{id}', function () {
-        });
-        $app->put('/{id}', function () {
-        });
-        $app->delete('/{id}', function () {
-        });
-    });
+        $app->get('', "App\Admin\Controller\PharmacieController:getAll");
+        $app->post('', "App\Admin\Controller\PharmacieController:add");
+        $app->get('/{id}',"App\Admin\Controller\PharmacieController:getOne");
+        $app->put('/{id}', "App\Admin\Controller\PharmacieController:update");
+        $app->post('/setStatus/{id}', "App\Admin\Controller\PharmacieController:setStatus");
+        $app->delete('/{id}', "App\Admin\Controller\PharmacieController:delete");
+    })->add(new Auth);
 
     $app->group('/categories_prodduits', function () use ($app): void {
         $app->get('', "App\Controller\UserController:getUsers");
