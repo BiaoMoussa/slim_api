@@ -40,6 +40,10 @@ class UserRepository extends BaseRepository
         }
         unset($user['password']);
         $idProfil = $user['profil'];
+        $profilStatus = $this->database->query("SELECT statut FROM profils WHERE id_profil='$idProfil'")->fetchColumn();
+        if($profilStatus==0){
+            throw new ExceptionUser("Votre profil a été désactivé.");
+        }
         $actions = $this->database->query("SELECT url_action as url, methode 
                                     FROM actions WHERE id_action IN (SELECT id_action FROM profil_has_actions WHERE id_profil='$idProfil')")
                                     ->fetchAll(PDO::FETCH_ASSOC);
@@ -59,8 +63,10 @@ class UserRepository extends BaseRepository
             if (!$this->profilExists($profil)) {
                 throw new UserException("Le profil $profil n'existe pas.");
             }
-            $QUERY = "INSERT INTO users(nom_user,prenom_user,login,password,id_profil,type_user)
-                VALUES (:nom,:prenom,:login,:password,:profil,:type)";
+           
+            $QUERY = "INSERT INTO users(nom_user,prenom_user,login,password,id_profil,type_user,created_by,modified_by)
+                VALUES (:nom,:prenom,:login,:password,:profil,:type,:createdBy,:updatedBy)";
+                 
             $this->database->prepare($QUERY)->execute($params);
             return $this->getOne($this->database->lastInsertId());
         } catch (PDOException $exception) {
@@ -94,7 +100,7 @@ class UserRepository extends BaseRepository
         try {
             $QUERY = "UPDATE users 
                         SET nom_user=:nom,prenom_user=:prenom,
-                        login=:login,id_profil=:profil,type_user=:type
+                        login=:login,id_profil=:profil,type_user=:type,modified_by=:updatedBy,modified_at=:updatedAt
                         WHERE id_user = :id AND $critere";
             $this->database->prepare($QUERY)->execute($params);
             return $this->getOne($id);

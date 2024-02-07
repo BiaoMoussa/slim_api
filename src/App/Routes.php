@@ -90,7 +90,7 @@ $app->group('/v1/admin', function () use ($app): void {
         $app->get('/{id}', "App\Admin\Controller\ActionController:getOne");
         $app->put('/{id}', "App\Admin\Controller\ActionController:update");
         $app->delete('/{id}', "App\Admin\Controller\ActionController:delete");
-    });
+    })->add(new Auth);
     $app->group('/profils', function () use ($app): void {
         $app->group('/actions', function () use ($app): void {
             $app->get('/{id}', "App\Admin\Controller\ProfilController:getProfilActions");
@@ -101,18 +101,19 @@ $app->group('/v1/admin', function () use ($app): void {
         $app->post('', "App\Admin\Controller\ProfilController:add");
         $app->get('/{id}', "App\Admin\Controller\ProfilController:getOne");
         $app->put('/{id}', "App\Admin\Controller\ProfilController:update");
+        $app->put('/setStatus/{id}', "App\Admin\Controller\ProfilController:setStatus");
         $app->delete('/{id}', "App\Admin\Controller\ProfilController:delete");
-    });
+    })->add(new Auth);
 
     $app->group('/users', function () use ($app): void {
-        $app->get('', "App\Admin\Controller\UserController:getAll")->add(new Auth);
+        $app->get('', "App\Admin\Controller\UserController:getAll");
         $app->post('', "App\Admin\Controller\UserController:add");
         $app->post('/resetPassword/{id}', "App\Admin\Controller\UserController:resetPassword");
         $app->get('/{id}',"App\Admin\Controller\UserController:getOne");
         $app->put('/{id}', "App\Admin\Controller\UserController:update");
         $app->post('/changePassword', "App\Admin\Controller\UserController:changePassword");
         $app->delete('/{id}', "App\Admin\Controller\UserController:delete");
-    });
+    })->add(new Auth);
 
 
     $app->group('/groupe_pharmacie_garde', function () use ($app): void {

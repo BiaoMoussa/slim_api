@@ -14,6 +14,9 @@ class ProfilController extends BaseController
     public function add(Request $request, Response $response): Response
     {
         $params  = $request->getParsedBody();
+        $params["updatedBy"] = $params["userLogged"]["user"]->id??null;
+        $params["createdBy"] = $params["userLogged"]["user"]->id??null;
+        unset($params["userLogged"]);
         $this->validate($params);
         $repository = new ProfilRepository;
         $action = $repository->insert($params);
@@ -23,7 +26,10 @@ class ProfilController extends BaseController
     public function update(Request $request, Response $response, array $args): Response
     {
         $id = $args["id"];
-        $params  = $request->getParsedBody();
+        $params  = (array)$request->getParsedBody();
+        $params["updatedBy"] = $params["userLogged"]["user"]->id??null;
+        $params["updatedAt"] = date("Y-m-d H:i:s");
+        unset($params["userLogged"]);
         $this->validate($params);
         $repository = new ProfilRepository;
         $action = $repository->update($id, $params);
@@ -67,6 +73,18 @@ class ProfilController extends BaseController
         return $this->jsonResponseWithoutMessage($response, 'success', $action, 200);
     }
 
+    public function setStatus(Request $request, Response $response, array $args): Response{
+        $id = $args['id'];
+        $params = $request->getParsedBody();
+        $this->required($params,"status",new ProfilException("status est obligatoire"));
+        if(isset($params["status"])){
+            if(is_null($params["status"])) throw new ProfilException("status ne peut être vide.");
+            if(!is_numeric($params["status"])) throw new ProfilException("status doit être un nombre entier.");
+            if($params["status"]!=0 && $params["status"]!=1) throw new ProfilException("status doit être 0:inactif ou 1:actif.");
+        }
+        $profil = (new ProfilRepository)->setStatus($id, $params["status"]);
+        return $this->jsonResponseWithData($response,"success","Statut mis à jour avec succès." ,$profil,200);
+    }
     public function delete(Request $request, Response $response, array $args): Response
     {
         $id = $args['id'];

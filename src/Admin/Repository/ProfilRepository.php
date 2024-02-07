@@ -25,8 +25,9 @@ class ProfilRepository  extends BaseRepository
             if ($this->exists("LOWER(libelle_profil)='$libelle_action' AND level='1'")) {
                 throw new ActionException("Cette action existe déjà !");
             }
-            $QUERY = "INSERT INTO profils (libelle_profil, level)
-                    VALUES (:libelle, :level)";
+
+            $QUERY = "INSERT INTO profils (libelle_profil, level, created_by,updated_by)
+                    VALUES (:libelle, :level, :createdBy, :updatedBy)";
             $this->database->prepare($QUERY)->execute($params);
             return $this->getOne($this->database->lastInsertId());
         } catch (ActionException $exception) {
@@ -39,20 +40,16 @@ class ProfilRepository  extends BaseRepository
     public function update($id, $params, $crietre = '')
     {
         try {
-           $profil =  $this->getOne($id);
+            $profil =  $this->getOne($id);
             $params["level"] = 1;
             $params["id"] = $id;
-            $params["statut"] =  $params["statut"] ?? $profil["statut"];
-            $params["societe"] =  $params["societe"] ?? $profil["societe"];
-            $params["type"] =  $params["type"] ?? $profil["type"];
-            $params["type"] =  $params["type"] ?? $profil["type"];
+            $params["libelle"] = isset($params["libelle"]) ? $params["libelle"] : $profil["libelle"];
 
             $QUERY = "UPDATE profils 
                     SET libelle_profil=:libelle,
-                    level=:level, 
-                    statut=:statut, 
-                    id_societe=:societe,
-                    type=:type
+                    level=:level,
+                    updated_by=:updatedBy,
+                    updated_at=:updatedAt
                     WHERE id_profil=:id";
             $this->database->prepare($QUERY)->execute($params);
             return $this->getOne($id);
@@ -84,26 +81,41 @@ class ProfilRepository  extends BaseRepository
 
     public function getOne($id, $critere = 'true')
     {
-        $QUERY = "SELECT id_profil as id, libelle_profil as libelle FROM profils WHERE id_profil=$id AND $critere";
+        $QUERY = "SELECT id_profil as id, libelle_profil as libelle, statut FROM profils WHERE id_profil=$id AND $critere";
         $action = $this->database->query($QUERY)->fetch(PDO::FETCH_ASSOC);
         if (empty($action)) {
             throw new ActionException("Profil non trouvé", 404);
         }
         return $action;
     }
-
+    public function setStatus($id, $status)
+    {
+        try {
+            $this->getOne($id);
+            $QUERY = "UPDATE profils 
+                    SET statut=:status
+                    WHERE id_profil=:id";
+            $this->database->prepare($QUERY)->execute(["status"=>$status, "id"=>(int)$id]);
+            return $this->getOne($id);
+        } catch (ActionException $exception) {
+            throw $exception;
+        } catch (PDOException $exception) {
+            throw $exception;
+        }
+    }
     public function exists($critere = 'true'): bool
     {
         $QUERY = "SELECT * FROM profils WHERE  $critere";
         return  $this->database->query($QUERY)->rowCount() > 0;
     }
-        
-    public function getActions($idProfil){
+
+    public function getActions($idProfil)
+    {
         $QUERY = "SELECT id_action as id, libelle_action as libelle, 
             description_action as description, methode, url_action as url, level 
             FROM actions 
             WHERE id_action IN (SELECT id_action FROM profil_has_actions WHERE id_profil='$idProfil')";
-           return  $this->database->query($QUERY)->fetchAll(PDO::FETCH_ASSOC);
+        return  $this->database->query($QUERY)->fetchAll(PDO::FETCH_ASSOC);
     }
 
     public function addActions($idProfil, $actions = [])
@@ -114,8 +126,8 @@ class ProfilRepository  extends BaseRepository
             $QUERY = "INSERT INTO profil_has_actions (id_profil,id_action) VALUES (:id_profil,:id_action)";
             if (!empty($actions)) {
                 foreach ($actions as $action) {
-                    $this->actionsExists($idProfil,$action);
-                    $this->relationExists($idProfil,$action);
+                    $this->actionsExists($idProfil, $action);
+                    $this->relationExists($idProfil, $action);
                     $query = $this->database->prepare($QUERY);
                     $query->bindParam("id_profil", $idProfil);
                     $query->bindParam("id_action", $action);
@@ -141,7 +153,7 @@ class ProfilRepository  extends BaseRepository
             $QUERY = "DELETE FROM profil_has_actions WHERE id_action=:id_action AND id_profil=:id_profil";
             if (!empty($actions)) {
                 foreach ($actions as $action) {
-                    $this->actionsExists($idProfil,$action);
+                    $this->actionsExists($idProfil, $action);
                     $query = $this->database->prepare($QUERY);
                     $query->bindParam("id_profil", $idProfil);
                     $query->bindParam("id_action", $action);
@@ -159,11 +171,12 @@ class ProfilRepository  extends BaseRepository
         }
     }
 
-    public function relationExists($idProfil, $idAction){
+    public function relationExists($idProfil, $idAction)
+    {
         $control_existence_liaison = $this->database
-        ->query("SELECT * FROM profil_has_actions WHERE id_action='$idAction' AND id_profil='$idProfil'")
-        ->rowCount() > 0;
-        if($control_existence_liaison){
+            ->query("SELECT * FROM profil_has_actions WHERE id_action='$idAction' AND id_profil='$idProfil'")
+            ->rowCount() > 0;
+        if ($control_existence_liaison) {
             throw new ProfilException("L'action $idAction est déjà dans la liste des actions du profil $idProfil.");
         }
     }
@@ -173,9 +186,8 @@ class ProfilRepository  extends BaseRepository
         $control_existence_action = $this->database
             ->query("SELECT * FROM actions WHERE id_action='$idAction'")
             ->rowCount() > 0;
-            if(!$control_existence_action){
-                throw new ProfilException("L'action $idAction n'existe pas.");
-            }
-            
+        if (!$control_existence_action) {
+            throw new ProfilException("L'action $idAction n'existe pas.");
+        }
     }
 }

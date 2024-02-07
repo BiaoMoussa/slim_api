@@ -16,6 +16,7 @@ class ActionController extends BaseController
     public function add(Request $request, Response $response): Response
     {
         $params  = $request->getParsedBody();
+        unset($params["userLogged"]);
         $this->validate($params);
         $repository = new ActionRepository;
         $action = $repository->insert($params);
@@ -26,6 +27,7 @@ class ActionController extends BaseController
     {
         $id = $args["id"];
         $params  = $request->getParsedBody();
+        unset($params["userLogged"]);
         $this->validateUpdate($params);
         $repository = new ActionRepository;
         $action = $repository->update($id, $params);

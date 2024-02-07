@@ -101,6 +101,9 @@ class UserController extends BaseController
     public function add(Request $request, Response $response): Response
     {
         $params  = (array)$request->getParsedBody();
+        $params["updatedBy"] = $params["userLogged"]["user"]->id??null;
+        $params["createdBy"] = $params["userLogged"]["user"]->id??null;
+        unset($params["userLogged"]);
         $this->validateInsert($params);
         $repository = new UserRepository;
         $user = $repository->insert($params);
@@ -111,6 +114,9 @@ class UserController extends BaseController
     {
         $id = $args["id"];
         $params  = (array)$request->getParsedBody();
+        $params["updatedBy"] = $params["userLogged"]["user"]->id??null;
+        $params["updatedAt"] = date("Y-m-d H:i:s");
+        unset($params["userLogged"]);
         $this->validateUpdate($params);
         $repository = new UserRepository;
         $user = $repository->update($id, $params);
