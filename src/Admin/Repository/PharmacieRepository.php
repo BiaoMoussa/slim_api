@@ -109,14 +109,14 @@ class PharmacieRepository  extends BaseRepository
 
     public function getAll($critere = 'true', $page = 1, $perPage = 10)
     {
-        $QUERY = "SELECT nom_pharmacie as nom, telephone, adresse, coordonnees, statut, observation, garde
+        $QUERY = "SELECT id_pharmacie as id, nom_pharmacie as nom, telephone, adresse, coordonnees, statut, observation, garde
         FROM pharmacies WHERE 1 AND $critere";
         return  $this->getResultsWithPagination($QUERY, $page, $perPage);
     }
 
     public function getOne($id, $critere = 'true')
     {
-        $QUERY = "SELECT nom_pharmacie as nom, telephone, adresse, coordonnees, statut, observation, garde
+        $QUERY = "SELECT id_pharmacie as id, nom_pharmacie as nom, telephone, adresse, coordonnees, statut, observation, garde
         FROM pharmacies WHERE id_pharmacie='$id' AND $critere";
         $pharmacie = $this->database->query($QUERY)->fetch(PDO::FETCH_ASSOC);
         if (empty($pharmacie)) {

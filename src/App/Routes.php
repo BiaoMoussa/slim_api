@@ -145,7 +145,19 @@ $app->group('/v1/admin', function () use ($app): void {
         $app->put('/{id}', "App\Admin\Controller\CategorieController:update");
         $app->delete('/{id}', "App\Admin\Controller\CategorieController:delete");
     })->add(new Auth());
-
+    $app->group('/groupes_gardes', function () use ($app): void {
+        $app->group('/pharmacies', function () use ($app): void {
+            $app->get('/{id}', "App\Admin\Controller\GroupeGardeController:getGroupePharmacies");
+            $app->post('/{id}', "App\Admin\Controller\GroupeGardeController:addGroupePharmacies");
+            $app->delete('/{id}', "App\Admin\Controller\GroupeGardeController:deleteGroupePharmacies");
+        });
+        $app->get('', "App\Admin\Controller\GroupeGardeController:getAll");
+        $app->post('', "App\Admin\Controller\GroupeGardeController:add");
+        $app->get('/{id}', "App\Admin\Controller\GroupeGardeController:getOne");
+        $app->put('/{id}', "App\Admin\Controller\GroupeGardeController:update");
+        $app->put('/setStatus/{id}', "App\Admin\Controller\GroupeGardeController:setStatus");
+        $app->delete('/{id}', "App\Admin\Controller\GroupeGardeController:delete");
+    })->add(new Auth);
     $app->group('/produits', function () use ($app): void {
         $app->get('', "App\Controller\UserController:getUsers");
         $app->post('', function () {
