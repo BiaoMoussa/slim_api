@@ -138,17 +138,13 @@ $app->group('/v1/admin', function () use ($app): void {
         $app->delete('/{id}', "App\Admin\Controller\PharmacieController:delete");
     })->add(new Auth);
 
-    $app->group('/categories_prodduits', function () use ($app): void {
-        $app->get('', "App\Controller\UserController:getUsers");
-        $app->post('', function () {
-        });
-        $app->get('/{id}', function () {
-        })->add(new Auth());
-        $app->put('/{id}', function () {
-        })->add(new Auth());
-        $app->delete('/{id}', function () {
-        })->add(new Auth());
-    });
+    $app->group('/categories', function () use ($app): void {
+        $app->get('', "App\Admin\Controller\CategorieController:getAll");
+        $app->post('', "App\Admin\Controller\CategorieController:add");
+        $app->get('/{id}',"App\Admin\Controller\CategorieController:getOne");
+        $app->put('/{id}', "App\Admin\Controller\CategorieController:update");
+        $app->delete('/{id}', "App\Admin\Controller\CategorieController:delete");
+    })->add(new Auth());
 
     $app->group('/produits', function () use ($app): void {
         $app->get('', "App\Controller\UserController:getUsers");
