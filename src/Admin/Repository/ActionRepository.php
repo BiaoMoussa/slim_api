@@ -48,6 +48,15 @@ class ActionRepository  extends BaseRepository
             $params["libelle"] =  $params["libelle"] ?? $action["libelle"];
             $params["methode"] =  $params["methode"] ?? $action["methode"];
             $params["url"] =  $params["url"] ?? $action["url"];
+
+            $libelle_action = $params["libelle"];
+            $methode = $params["methode"];
+            $url = $params["url"];
+            if ($libelle_action != $action["libelle"] && $methode != $action["methode"] && $url != $action["url"]) {
+                if ($this->exists("libelle_action='$libelle_action' AND methode='$methode' AND url_action='$url'")) {
+                    throw new ActionException("Cette action existe déjà !");
+                }
+            }
             $QUERY = "UPDATE actions 
                     SET libelle_action=:libelle,
                     description_action=:description, 
@@ -77,7 +86,7 @@ class ActionRepository  extends BaseRepository
         }
     }
 
-    public function getAll($critere = 'true',$page=1, $perPage= 10)
+    public function getAll($critere = 'true', $page = 1, $perPage = 10)
     {
         $QUERY = "SELECT id_action as id, libelle_action as libelle, methode, 
         url_action as url,description_action as description
