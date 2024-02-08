@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Admin\Controller;
 
-use App\Repository\BaseRepository;
+use App\Admin\Repository\BaseRepository;
 use Exception;
 use Respect\Validation\Validator;
 use Slim\Container;
@@ -94,7 +94,7 @@ abstract class BaseController
     protected function validateEmail(string $email, Exception $exception): string {
         $email = filter_var($email, FILTER_SANITIZE_EMAIL);
         if (!Validator::email()->validate($email)) {
-            throw new \App\Exception\User('Invalid email', 400);
+            throw new Exception('Invalid email', 400);
         }
         return (string) $email;
     }

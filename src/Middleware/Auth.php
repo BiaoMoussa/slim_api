@@ -36,8 +36,8 @@ final class Auth extends Base
         $urlToMatch = new stdClass;
         $urlToMatch->url = $this->urlAdapter($url);
         $urlToMatch->methode = $method;
-        $permission_accordee = (bool)array_search($urlToMatch, $decoded["user"]->actions);
-        if (!$permission_accordee && $permission_accordee!=0) {
+        $permission_accordee = in_array($urlToMatch, $decoded["user"]->actions);  
+        if (!$permission_accordee) {
             throw new ExceptionAuth('Forbidden: Accès interdit à cette url.', 403);
         }
         return $next($request->withParsedBody($object), $response);

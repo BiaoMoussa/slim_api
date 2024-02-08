@@ -1,5 +1,8 @@
 {
     "php-implementor.autoloads": {
         "src": "App\\"
+    },
+    "yaml.schemas": {
+        "swaggerviewer:openapi": "file:///c%3A/wamp64/www/api_pharma/extras/docs/Documentation%20Api.yml"
     }
 }

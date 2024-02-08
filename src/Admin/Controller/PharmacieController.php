@@ -79,6 +79,36 @@ class PharmacieController extends BaseController
         return $this->jsonResponseWithoutMessage($response, 'success', $pharmacies, 200);
     }
 
+    public function addAdmin(Request $request, Response $response, array $args):Response{
+        $id = $args['id'];
+        $params = $request->getParsedBody();
+        $params["updatedBy"] = $params["userLogged"]["user"]->id??null;
+        $params["createdBy"] = $params["userLogged"]["user"]->id??null;
+        unset($params["userLogged"]);
+        $this->validateAdmin($params);
+        $admin = (new PharmacieRepository)->addAdmin($id,$params);
+        return $this->jsonResponseWithData($response, "success", "Admin créé avec succès(password:Default2024)", $admin, 200);
+
+    }
+
+    public function updateAdmin(Request $request, Response $response, array $args):Response{
+        $id = $args["id"];
+        $params  = (array)$request->getParsedBody();
+        $params["updatedBy"] = $params["userLogged"]["user"]->id??null;
+        $params["updatedAt"] = date("Y-m-d H:i:s");
+        unset($params["userLogged"]);
+        $this->validateAdmin($params);
+        $repository = new PharmacieRepository;
+        $admin = $repository->updateAdmin($id, $params);
+        return $this->jsonResponseWithData($response, "success", "Admin modifiée avec succès", $admin, 200);
+    }
+
+    public function getAdmin(Request $request, Response $response, array $args):Response{
+        $id = $args["id"];
+        $admin = (new PharmacieRepository)->getAdmin($id);
+        return $this->jsonResponseWithoutMessage($response, 'success', $admin, 200); 
+    }
+
     public function getOne(Request $request, Response $response, array $args): Response
     {
         $id = $args["id"];
@@ -125,5 +155,20 @@ class PharmacieController extends BaseController
         if(isset($params["adresse"])){
             if(strlen($params["adresse"])<2) throw new PharmacieException("adresse doit avoir au moins 2 caractères.");
         }
+    }
+
+    private function  validateAdmin($params){
+        if(isset($params["nom"])){
+            if(strlen($params["nom"])<3) throw new PharmacieException("nom doit avoir au moins 3 caractères.");
+        }
+        if(isset($params["prenom"])){
+            if(strlen($params["prenom"])<3) throw new PharmacieException("prenom doit avoir au moins 3 caractères.");
+        }
+        if (isset($params["login"]) && !is_null($params["login"])) {
+            if (!is_string($params["login"])) throw new PharmacieException("login doit être une chaine de caractère");
+            if (strlen($params["login"]) <= 2) throw new PharmacieException("login doit avoir au moins 3 caractères");
+            if (!preg_match("/^([a-z]+)+$/", $params["login"])) throw new PharmacieException("login ne doit comporter que des les lettre de a à z sans accent.");
+        }
+
     }
 }

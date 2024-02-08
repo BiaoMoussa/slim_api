@@ -20,7 +20,7 @@ use App\Middleware\Auth;
 
 $app->get('/', 'App\Controller\DefaultController:getHelp');
 $app->get('/status', 'App\Controller\DefaultController:getStatus');
-$app->post('/v1/login', "App\Admin\Controller\UserController:login");
+$app->post('/v1/login', "App\Controller\UserController:login");
 $app->get('/error', "App\Controller\UserController:handleError");
 
 
@@ -34,44 +34,31 @@ $app->get('/error', "App\Controller\UserController:handleError");
  * Les routes des fonctionnalités usuelles 
  */
 
-$app->group('/api/v1', function () use ($app): void {
+$app->group('/v1', function () use ($app): void {
     $app->group('/users', function () use ($app): void {
-        $app->get('', function () {
-        });
-        $app->post('', function () {
-        });
-        $app->get('/{id}', function () {
-        });
-        $app->put('/{id}', function () {
-        });
-        $app->delete('/{id}', function () {
-        });
-    })->add(new Auth());
+        $app->get('', "App\Controller\UserController:getAll");
+        $app->post('', "App\Controller\UserController:add");
+        $app->post('/resetPassword/{id}', "App\Controller\UserController:resetPassword");
+        $app->get('/{id}',"App\Controller\UserController:getOne");
+        $app->put('/{id}', "App\Controller\UserController:update");
+        $app->post('/changePassword', "App\Controller\UserController:changePassword");
+        $app->delete('/{id}', "App\Controller\UserController:delete");
+    })->add(new Auth);
 
     $app->group('/profils', function () use ($app): void {
-        $app->get('', "App\Controller\UserController:getUsers")->add(new Auth());
-        $app->post('', function () {
+        $app->group('/actions', function () use ($app): void {
+            $app->get('/{id}', "App\Controller\ProfilController:getProfilActions");
+            $app->post('/{id}', "App\Controller\ProfilController:addActions");
+            $app->delete('/{id}', "App\Controller\ProfilController:deleteActions");
         });
-        $app->get('/{id}', function () {
-        })->add(new Auth());
-        $app->put('/{id}', function () {
-        })->add(new Auth());
-        $app->delete('/{id}', function () {
-        })->add(new Auth());
-    });
-
-    $app->group('/actions', function () use ($app): void {
-        $app->get('', function () {
-        });
-        $app->post('', function () {
-        });
-        $app->get('/{id}', function () {
-        });
-        $app->put('/{id}', function () {
-        });
-        $app->delete('/{id}', function () {
-        });
-    });
+        $app->get('', "App\Controller\ProfilController:getAll");
+        $app->post('', "App\Controller\ProfilController:add");
+        $app->get('/{id}', "App\Controller\ProfilController:getOne");
+        $app->put('/{id}', "App\Controller\ProfilController:update");
+        $app->put('/setStatus/{id}', "App\Controller\ProfilController:setStatus");
+        $app->delete('/{id}', "App\Controller\ProfilController:delete");
+    })->add(new Auth);
+    
 });
 
 
@@ -135,6 +122,9 @@ $app->group('/v1/admin', function () use ($app): void {
         $app->get('/{id}',"App\Admin\Controller\PharmacieController:getOne");
         $app->put('/{id}', "App\Admin\Controller\PharmacieController:update");
         $app->post('/setStatus/{id}', "App\Admin\Controller\PharmacieController:setStatus");
+        $app->post('/admin/{id}', "App\Admin\Controller\PharmacieController:addAdmin");
+        $app->put('/admin/{id}', "App\Admin\Controller\PharmacieController:updateAdmin");
+        $app->get('/admin/{id}', "App\Admin\Controller\PharmacieController:getAdmin");
         $app->delete('/{id}', "App\Admin\Controller\PharmacieController:delete");
     })->add(new Auth);
 

@@ -6,7 +6,6 @@ namespace App\Admin\Repository;
 
 
 use App\Admin\Exception\UserException;
-use App\Exception\User as ExceptionUser;
 use PDO;
 use PDOException;
 
@@ -26,14 +25,14 @@ class UserRepository extends BaseRepository
         $statement->execute();
         $user = $statement->fetch(PDO::FETCH_ASSOC);
         if (empty($user)) {
-            throw new ExceptionUser(
+            throw new UserException(
                 'Login echoué: login ou password incorrect.',
                 400
             );
         }
         
         if (!password_verify($password, $user['password'])) {
-            throw new ExceptionUser(
+            throw new UserException(
                 'Login echoué: login ou password incorrect.',
                 400
             );
@@ -42,7 +41,7 @@ class UserRepository extends BaseRepository
         $idProfil = $user['profil'];
         $profilStatus = $this->database->query("SELECT statut FROM profils WHERE id_profil='$idProfil'")->fetchColumn();
         if($profilStatus==0){
-            throw new ExceptionUser("Votre profil a été désactivé.");
+            throw new UserException("Votre profil a été désactivé.");
         }
         $actions = $this->database->query("SELECT url_action as url, methode 
                                     FROM actions WHERE id_action IN (SELECT id_action FROM profil_has_actions WHERE id_profil='$idProfil')")
