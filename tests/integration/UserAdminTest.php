@@ -4,44 +4,45 @@ declare(strict_types=1);
 
 namespace Tests\integration;
 
-class UserTest extends BaseTestCase
+class UserAdminTest extends BaseTestCase
 {
     private static int $id;
 
-    public function testLogin(){
-        $response = $this->runApp('POST', '/login', ['login' => 'docteur', 'password' => 'Default2024']);
-        $result = (string) $response->getBody();
-        self::$jwt ="Bearer ". json_decode($result)->message->Authorization;
-        $this->assertEquals(200, $response->getStatusCode());
-        $this->assertEquals('application/json', $response->getHeaderLine('Content-Type'));
-        $this->assertStringContainsString('Authorization',$result);
-    }
-
     /**
      * Test Get All Users.
-     * @depends testLogin
      */
     public function testGetUsers(): void
     {
-        $response = $this->runApp('GET', '/users');
+        $response = $this->runApp('GET', '/api/v1/users');
+
         $result = (string) $response->getBody();
+
         $this->assertEquals(200, $response->getStatusCode());
         $this->assertEquals('application/json', $response->getHeaderLine('Content-Type'));
         $this->assertStringContainsString('success', $result);
+        $this->assertStringContainsString('id', $result);
+        $this->assertStringContainsString('name', $result);
+        $this->assertStringContainsString('email', $result);
+        $this->assertStringNotContainsString('error', $result);
     }
 
     /**
      * Test Get Users By Page.
-     * @depends testLogin
      */
     public function testGetUsersByPage(): void
     {
-        $response = $this->runApp('GET', '/users?page=1&perPage=3');
+        $response = $this->runApp('GET', '/api/v1/users?page=1&perPage=3');
+
         $result = (string) $response->getBody();
+
         $this->assertEquals(200, $response->getStatusCode());
         $this->assertEquals('application/json', $response->getHeaderLine('Content-Type'));
         $this->assertStringContainsString('success', $result);
-       
+        $this->assertStringContainsString('pagination', $result);
+        $this->assertStringContainsString('id', $result);
+        $this->assertStringContainsString('name', $result);
+        $this->assertStringContainsString('email', $result);
+        $this->assertStringNotContainsString('error', $result);
     }
 
     /**
@@ -49,8 +50,17 @@ class UserTest extends BaseTestCase
      */
     public function testGetUser(): void
     {
-        $response = $this->runApp('GET', '/users/8');
-        $this->assertNotEquals(500,$response->getStatusCode(), "Api: GET /users/8 non opérationelle");
+        $response = $this->runApp('GET', '/api/v1/users/8');
+
+        $result = (string) $response->getBody();
+
+        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertEquals('application/json', $response->getHeaderLine('Content-Type'));
+        $this->assertStringContainsString('success', $result);
+        $this->assertStringContainsString('id', $result);
+        $this->assertStringContainsString('name', $result);
+        $this->assertStringContainsString('email', $result);
+        $this->assertStringNotContainsString('error', $result);
     }
 
     /**

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Admin\Controller;
 
+use App\Admin\Exception\ActionException;
 use App\Admin\Exception\GroupeGardeException;
 use App\Admin\Repository\GroupeGardeRepository;
 use Slim\Http\Request;
@@ -11,6 +12,10 @@ use Slim\Http\Response;
 
 class GroupeGardeController extends BaseController
 {
+    /**
+     * @throws ActionException
+     * @throws GroupeGardeException
+     */
     public function add(Request $request, Response $response): Response
     {
         $params  = $request->getParsedBody();

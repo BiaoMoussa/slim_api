@@ -9,10 +9,23 @@ use App\Admin\Repository\ActionRepository;
 use Slim\Http\Request;
 use Slim\Http\Response;
 
+/**
+ *
+ */
 class ActionController extends BaseController
 {
 
+    /**
+     * @var string[]
+     */
     protected $methodes = ["get", "post", "put", "delete"];
+
+    /**
+     * @param Request $request
+     * @param Response $response
+     * @return Response
+     * @throws ActionException
+     */
     public function add(Request $request, Response $response): Response
     {
         $params  = $request->getParsedBody();
@@ -23,6 +36,13 @@ class ActionController extends BaseController
         return $this->jsonResponseWithData($response, "success", "Action ajoutée avec succès", $action, 201);
     }
 
+    /**
+     * @param Request $request
+     * @param Response $response
+     * @param array $args
+     * @return Response
+     * @throws ActionException
+     */
     public function update(Request $request, Response $response, array $args): Response
     {
         $id = $args["id"];
@@ -34,6 +54,11 @@ class ActionController extends BaseController
         return $this->jsonResponseWithData($response, "success", "Action modifiée avec succès", $action, 200);
     }
 
+    /**
+     * @param Request $request
+     * @param Response $response
+     * @return Response
+     */
     public function getAll(Request $request, Response $response): Response
     {
 
@@ -77,6 +102,13 @@ class ActionController extends BaseController
         return $this->jsonResponseWithoutMessage($response, 'success', $actions, 200);
     }
 
+    /**
+     * @param Request $request
+     * @param Response $response
+     * @param array $args
+     * @return Response
+     * @throws ActionException
+     */
     public function getOne(Request $request, Response $response, array $args): Response
     {
         $id = $args["id"];
@@ -84,6 +116,13 @@ class ActionController extends BaseController
         return $this->jsonResponseWithoutMessage($response, 'success', $action, 200);
     }
 
+    /**
+     * @param Request $request
+     * @param Response $response
+     * @param array $args
+     * @return Response
+     * @throws ActionException
+     */
     public function delete(Request $request, Response $response, array $args): Response
     {
         $id = $args['id'];
@@ -91,20 +130,35 @@ class ActionController extends BaseController
         return $this->jsonResponse($response, 'success', "Action supprimée avec succès", 200);
     }
 
-    protected function checkMethod(string $method)
+    /**
+     * @param string $method
+     * @return void
+     * @throws ActionException
+     */
+    protected function checkMethod(string $method): void
     {
         if (!in_array($method, $this->methodes)) {
             throw new ActionException('Methode doit être une de: ' . join('|', $this->methodes));
         }
     }
 
-    protected function checkUrl(string $url)
+    /**
+     * @param string $url
+     * @return void
+     * @throws ActionException
+     */
+    protected function checkUrl(string $url): void
     {
         if (!is_int(strpos($url, '/'))) {
             throw new ActionException('url doit comporter au moins un /');
         }
     }
 
+    /**
+     * @param $params
+     * @return void
+     * @throws ActionException
+     */
     private function validate($params)
     {
         $this->required($params, "libelle", new ActionException("libelle est obligatoire"));
@@ -117,7 +171,12 @@ class ActionController extends BaseController
     }
 
 
-    private function validateUpdate($params)
+    /**
+     * @param $params
+     * @return void
+     * @throws ActionException
+     */
+    private function validateUpdate($params): void
     {
         if (isset($params["libelle"]) && !is_null($params["libelle"])) {
             if (strlen($params["libelle"]) < 3) throw new ActionException("libelle doit comporter au moins 3 lettres");

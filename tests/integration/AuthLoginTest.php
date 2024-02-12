@@ -11,15 +11,12 @@ class AuthLoginTest extends BaseTestCase
      */
     public function testLogin(): void
     {
-        $response = $this->runApp('POST', '/login', ['email' => 'test@user.com', 'password' => 'AnyPass1000']);
+        $response = $this->runApp('POST', '/login', ['login' => 'bbm', 'password' => 'Deafult2024']);
 
         $result = (string) $response->getBody();
-
-        self::$jwt = json_decode($result)->message->Authorization;
-
+        self::$jwt ="Bearer ". json_decode($result)->message->Authorization;
         $this->assertEquals(200, $response->getStatusCode());
         $this->assertEquals('application/json', $response->getHeaderLine('Content-Type'));
-        $this->assertStringContainsString('Authorization', $result);
-        $this->assertStringContainsString('Bearer', $result);
+        $this->assertStringContainsString('Authorization',$result);
     }
 }

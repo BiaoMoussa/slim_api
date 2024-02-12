@@ -22,7 +22,7 @@ class BaseTestCase extends \PHPUnit\Framework\TestCase
         $environment = Environment::mock(
             [
                 'REQUEST_METHOD' => $requestMethod,
-                'REQUEST_URI' => $requestUri
+                'REQUEST_URI' => "localhost:8181/v1". $requestUri
             ]
         );
 

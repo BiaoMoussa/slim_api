@@ -21,6 +21,7 @@ use App\Middleware\Auth;
 $app->get('/', 'App\Controller\DefaultController:getHelp');
 $app->get('/status', 'App\Controller\DefaultController:getStatus');
 $app->post('/v1/login', "App\Controller\UserController:login");
+$app->post('/v1/admin/login', "App\Admin\Controller\UserController:login");
 $app->get('/error', "App\Controller\UserController:handleError");
 
 

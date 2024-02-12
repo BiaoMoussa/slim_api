@@ -9,13 +9,16 @@ use App\Admin\Repository\CategorieRepository;
 
 use Slim\Http\Request;
 use Slim\Http\Response;
-use Firebase\JWT\JWT;
 
 class CategorieController extends BaseController
 {
 
-   
 
+    /**
+     * @param Request $request
+     * @param Response $response
+     * @return Response
+     */
     public function getAll(Request $request, Response $response): Response
     {
         $queryParams = (array)$request->getQueryParams();
@@ -25,7 +28,7 @@ class CategorieController extends BaseController
             $idCategorie = $queryParams["id"];
             $critere .= "AND id_categorie='$idCategorie' ";
         }
-    
+
         if (isset($queryParams["code_categorie"]) && !is_null($queryParams["code_categorie"])) {
             $code = strtolower($queryParams["code_categorie"]);
             $critere .= "AND LOWER(code_categorie) LIKE '%$code%' ";
@@ -35,8 +38,8 @@ class CategorieController extends BaseController
             $libelle = strtolower($queryParams["libelle_categorie"]);
             $critere .= "AND LOWER(libelle_categorie) LIKE '%$libelle%' ";
         }
-    
-     
+
+
 
         if (isset($queryParams["perPage"]) && !empty($queryParams["perPage"])) {
             $perPage = (int)$queryParams["perPage"];
@@ -55,6 +58,13 @@ class CategorieController extends BaseController
         return $this->jsonResponseWithoutMessage($response, 'success', $encodeJson, 200);
     }
 
+    /**
+     * @param Request $request
+     * @param Response $response
+     * @param array $args
+     * @return Response
+     * @throws CategorieException
+     */
     public function getOne(Request $request, Response $response, array $args)
     {
         $id = $args["id"];
@@ -62,6 +72,11 @@ class CategorieController extends BaseController
         return $this->jsonResponseWithoutMessage($response, 'success', $action, 200);
     }
 
+    /**
+     * @param Request $request
+     * @param Response $response
+     * @return Response
+     */
     public function add(Request $request, Response $response): Response
     {
         $params  = (array)$request->getParsedBody();
@@ -74,6 +89,13 @@ class CategorieController extends BaseController
         return $this->jsonResponseWithData($response, 'success', "Categorie créée avec succès.", $user, 200);
     }
 
+    /**
+     * @param Request $request
+     * @param Response $response
+     * @param array $args
+     * @return Response
+     * @throws CategorieException
+     */
     public function update(Request $request, Response $response, array $args): Response
     {
         $id = $args["id"];
@@ -87,6 +109,13 @@ class CategorieController extends BaseController
         return $this->jsonResponseWithData($response, 'success', "Categorie modifiée avec succès.", $user, 200);
     }
 
+    /**
+     * @param Request $request
+     * @param Response $response
+     * @param array $args
+     * @return Response
+     * @throws CategorieException
+     */
     public function delete(Request $request, Response $response, array $args): Response
     {
         $id = $args['id'];
@@ -95,7 +124,11 @@ class CategorieController extends BaseController
     }
 
 
-
+    /**
+     * @param $params
+     * @return void
+     * @throws CategorieException
+     */
     private function validateInsert($params)
     {
         $this->required($params, "code_categorie", new CategorieException("code est obligatoire."));
@@ -103,6 +136,11 @@ class CategorieController extends BaseController
         $this->validateUpdate($params);
     }
 
+    /**
+     * @param $params
+     * @return void
+     * @throws CategorieException
+     */
     private function validateUpdate($params)
     {
         if (isset($params["code_categorie"]) && !is_null($params["code_categorie"])) {
