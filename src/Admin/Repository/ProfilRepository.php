@@ -81,13 +81,13 @@ class ProfilRepository  extends BaseRepository
 
     public function getAll($critere = 'true', $page = 1, $perPage = 10)
     {
-        $QUERY = "SELECT id_profil as id, libelle_profil as libelle, statut FROM profils WHERE 1 AND $critere";
+        $QUERY = "SELECT id_profil as id, libelle_profil as libelle, statut FROM profils WHERE level=1 AND 1 AND $critere";
         return  $this->getResultsWithPagination($QUERY, $page, $perPage);
     }
 
     public function getOne($id, $critere = 'true')
     {
-        $QUERY = "SELECT id_profil as id, libelle_profil as libelle, statut FROM profils WHERE id_profil=$id AND $critere";
+        $QUERY = "SELECT id_profil as id, libelle_profil as libelle, statut FROM profils WHERE level=1 AND  id_profil=$id AND $critere";
         $action = $this->database->query($QUERY)->fetch(PDO::FETCH_ASSOC);
         if (empty($action)) {
             throw new ActionException("Profil non trouvé", 404);
@@ -111,7 +111,7 @@ class ProfilRepository  extends BaseRepository
     }
     public function exists($critere = 'true'): bool
     {
-        $QUERY = "SELECT * FROM profils WHERE  $critere";
+        $QUERY = "SELECT * FROM profils WHERE level=1 AND $critere";
         return  $this->database->query($QUERY)->rowCount() > 0;
     }
 
@@ -132,7 +132,7 @@ class ProfilRepository  extends BaseRepository
             $QUERY = "INSERT INTO profil_has_actions (id_profil,id_action) VALUES (:id_profil,:id_action)";
             if (!empty($actions)) {
                 foreach ($actions as $action) {
-                    $this->actionsExists($idProfil, $action);
+                    $this->actionsExists($action);
                     $this->relationExists($idProfil, $action);
                     $query = $this->database->prepare($QUERY);
                     $query->bindParam("id_profil", $idProfil);
@@ -159,7 +159,7 @@ class ProfilRepository  extends BaseRepository
             $QUERY = "DELETE FROM profil_has_actions WHERE id_action=:id_action AND id_profil=:id_profil";
             if (!empty($actions)) {
                 foreach ($actions as $action) {
-                    $this->actionsExists($idProfil, $action);
+                    $this->actionsExists($action);
                     $query = $this->database->prepare($QUERY);
                     $query->bindParam("id_profil", $idProfil);
                     $query->bindParam("id_action", $action);
@@ -187,10 +187,10 @@ class ProfilRepository  extends BaseRepository
         }
     }
 
-    private function actionsExists($idProfil, $idAction)
+    private function actionsExists($idAction)
     {
         $control_existence_action = $this->database
-            ->query("SELECT * FROM actions WHERE id_action='$idAction'")
+            ->query("SELECT * FROM actions WHERE level=1 AND id_action='$idAction'")
             ->rowCount() > 0;
         if (!$control_existence_action) {
             throw new ProfilException("L'action $idAction n'existe pas.");
