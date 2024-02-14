@@ -40,7 +40,7 @@ $app->group('/v1', function () use ($app): void {
         $app->get('', "App\Controller\UserController:getAll");
         $app->post('', "App\Controller\UserController:add");
         $app->post('/resetPassword/{id}', "App\Controller\UserController:resetPassword");
-        $app->get('/{id}',"App\Controller\UserController:getOne");
+        $app->get('/{id}', "App\Controller\UserController:getOne");
         $app->put('/{id}', "App\Controller\UserController:update");
         $app->post('/changePassword', "App\Controller\UserController:changePassword");
         $app->delete('/{id}', "App\Controller\UserController:delete");
@@ -59,7 +59,6 @@ $app->group('/v1', function () use ($app): void {
         $app->put('/setStatus/{id}', "App\Controller\ProfilController:setStatus");
         $app->delete('/{id}', "App\Controller\ProfilController:delete");
     })->add(new Auth);
-    
 });
 
 
@@ -97,7 +96,7 @@ $app->group('/v1/admin', function () use ($app): void {
         $app->get('', "App\Admin\Controller\UserController:getAll");
         $app->post('', "App\Admin\Controller\UserController:add");
         $app->post('/resetPassword/{id}', "App\Admin\Controller\UserController:resetPassword");
-        $app->get('/{id}',"App\Admin\Controller\UserController:getOne");
+        $app->get('/{id}', "App\Admin\Controller\UserController:getOne");
         $app->put('/{id}', "App\Admin\Controller\UserController:update");
         $app->post('/changePassword', "App\Admin\Controller\UserController:changePassword");
         $app->delete('/{id}', "App\Admin\Controller\UserController:delete");
@@ -120,7 +119,7 @@ $app->group('/v1/admin', function () use ($app): void {
     $app->group('/pharmacies', function () use ($app): void {
         $app->get('', "App\Admin\Controller\PharmacieController:getAll");
         $app->post('', "App\Admin\Controller\PharmacieController:add");
-        $app->get('/{id}',"App\Admin\Controller\PharmacieController:getOne");
+        $app->get('/{id}', "App\Admin\Controller\PharmacieController:getOne");
         $app->put('/{id}', "App\Admin\Controller\PharmacieController:update");
         $app->post('/setStatus/{id}', "App\Admin\Controller\PharmacieController:setStatus");
         $app->post('/admin/{id}', "App\Admin\Controller\PharmacieController:addAdmin");
@@ -132,7 +131,7 @@ $app->group('/v1/admin', function () use ($app): void {
     $app->group('/categories', function () use ($app): void {
         $app->get('', "App\Admin\Controller\CategorieController:getAll");
         $app->post('', "App\Admin\Controller\CategorieController:add");
-        $app->get('/{id}',"App\Admin\Controller\CategorieController:getOne");
+        $app->get('/{id}', "App\Admin\Controller\CategorieController:getOne");
         $app->put('/{id}', "App\Admin\Controller\CategorieController:update");
         $app->delete('/{id}', "App\Admin\Controller\CategorieController:delete");
     })->add(new Auth());
@@ -154,8 +153,18 @@ $app->group('/v1/admin', function () use ($app): void {
     $app->group('/produits', function () use ($app): void {
         $app->get('', "App\Admin\Controller\ProduitController:getAll");
         $app->post('', "App\Admin\Controller\ProduitController:add");
-        $app->get('/{id}',"App\Admin\Controller\ProduitController:getOne");
+        $app->get('/{id}', "App\Admin\Controller\ProduitController:getOne");
         $app->put('/{id}', "App\Admin\Controller\ProduitController:update");
         $app->delete('/{id}', "App\Admin\Controller\ProduitController:delete");
+    })->add(new Auth());
+
+    $app->group('/pharmacie_has_produits', function () use ($app): void {
+        $app->get('', "App\Admin\Controller\PharmacieHasProduitController:getAll");
+        $app->post('/{id}', "App\Admin\Controller\PharmacieHasProduitController:add");
+        $app->post('', "App\Admin\Controller\PharmacieHasProduitController:setStatus");
+        $app->get('/{id}', "App\Admin\Controller\PharmacieHasProduitController:getOne");
+        $app->get('/pharmacie/{id}', "App\Admin\Controller\PharmacieHasProduitController:getPharamacieProduits");
+        $app->put('/{id}', "App\Admin\Controller\PharmacieHasProduitController:update");
+        $app->delete('/{id}', "App\Admin\Controller\PharmacieHasProduitController:delete");
     })->add(new Auth());
 });
