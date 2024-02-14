@@ -47,9 +47,11 @@ class UserRepository extends BaseRepository
         $actions = $this->database->query("SELECT url_action as url, methode 
                                     FROM actions WHERE id_action IN 
                                     (SELECT id_action FROM profil_has_actions, profils
-                                         WHERE profil_has_actions.id_profil='$idProfil' AND profils.id_societe='$pharmacie')")
+                                         WHERE profil_has_actions.id_profil='$idProfil' )")
                                     ->fetchAll(PDO::FETCH_ASSOC);
         return array_merge($user, ["actions"=>$actions]);
+
+
     }
 
     public function insert($params = [])
