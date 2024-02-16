@@ -19,7 +19,7 @@ class PharmacieHasProduitController extends BaseController
         $params["createdAt"] = date("Y-m-d H:i:s");
         $params["createdBy"] = $params["userLogged"]["user"]->id??0;
         unset($params["userLogged"]);
-        $this->validateActionsSaving($params['produits']);
+        $this->validate($params['produits']);
         $repository = new PharmacieHasProduitRepository;
         $pharmacie = $repository->addPharmacieHasProduit($pharmacie, $params['produits'],$params["createdBy"],$params["createdAt"]);
         return $this->jsonResponseWithData($response, "success", "Produits ajoutés avec succès", $pharmacie, 200);

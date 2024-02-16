@@ -122,7 +122,7 @@ $app->group('/v1/admin', function () use ($app): void {
             $app->post('/{id}', "App\Admin\Controller\PharmacieHasProduitController:add");
             $app->post('setStatus', "App\Admin\Controller\PharmacieHasProduitController:setStatus");
             $app->get('/{id}', "App\Admin\Controller\PharmacieHasProduitController:getOne");
-            $app->get('/find_one_produit/{id}', "App\Admin\Controller\PharmacieHasProduitController:getPharamacieProduits");
+            $app->get('/find_one_pharmacie/{id}', "App\Admin\Controller\PharmacieHasProduitController:getPharamacieProduits");
             $app->put('/{id}', "App\Admin\Controller\PharmacieHasProduitController:update");
             $app->delete('/{id}', "App\Admin\Controller\PharmacieHasProduitController:delete");
         });
