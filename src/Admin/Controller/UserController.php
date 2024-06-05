@@ -59,7 +59,7 @@ class UserController extends BaseController
         }
         if (isset($queryParams["profil"]) && !is_null($queryParams["profil"])) {
             $profilUser = $queryParams["profil"];
-            $critere .= "AND id_profil='$profilUser' ";
+            $critere .= "AND users.id_profil='$profilUser' ";
         }
         if (isset($queryParams["nom"]) && !is_null($queryParams["nom"])) {
             $nomUser = strtolower($queryParams["nom"]);

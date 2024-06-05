@@ -43,9 +43,13 @@ class UserRepository extends BaseRepository
         if($profilStatus==0){
             throw new UserException("Votre profil a été désactivé.");
         }
+
+        $subCritera = "id_action IN (SELECT id_action FROM profil_has_actions WHERE id_profil='$idProfil')";
+
         $actions = $this->database->query("SELECT url_action as url, methode 
-                                    FROM actions WHERE id_action IN (SELECT id_action FROM profil_has_actions WHERE id_profil='$idProfil')")
+                                    FROM actions WHERE $subCritera")
                                     ->fetchAll(PDO::FETCH_ASSOC);
+
         return array_merge($user, ["actions"=>$actions]);
     }
 
@@ -124,25 +128,39 @@ class UserRepository extends BaseRepository
     public function getAll($critere = '', $page = 1, $perPage = 10)
     {
         $QUERY = "SELECT id_user as id, nom_user as nom, prenom_user as prenom, 
-        login ,id_profil as profil
-        FROM users WHERE 1 AND $critere";
+        login ,users.id_profil as profil, libelle_profil
+        FROM users, profils WHERE users.id_profil=profils.id_profil  AND $critere";
         return  $this->getResultsWithPagination($QUERY, $page, $perPage);;
     }
 
     public function getOne($id, $critere = 'true')
     {
         $QUERY = "SELECT id_user as id, nom_user as nom, prenom_user as prenom, 
-        login ,id_profil as profil
-        FROM users WHERE id_user='$id' AND $critere";
+        login ,users.id_profil as profil, libelle_profil 
+        FROM users, profils WHERE users.id_profil=profils.id_profil AND id_user='$id' AND $critere";
         $user = $this->database->query($QUERY)->fetch(PDO::FETCH_ASSOC);
         if (empty($user)) {
             throw new UserException("User non trouvé.", 404);
         }
         $idProfil = $user['profil'];
+        $subCritera = "id_action IN (SELECT id_action FROM profil_has_actions WHERE id_profil='$idProfil')";
+        
         $actions = $this->database->query("SELECT url_action as url, methode 
-                                    FROM actions WHERE id_action IN (SELECT id_action FROM profil_has_actions WHERE id_profil='$idProfil')")
+                                    FROM actions WHERE $subCritera")
                                     ->fetchAll(PDO::FETCH_ASSOC);
-        return array_merge($user, ["actions"=>$actions]);
+
+        $menu = $this->database->query("SELECT id_action as id, 
+            url_action as url, icon, libelle_action as label, description_action as description 
+        FROM actions WHERE (is_menu=1 AND $subCritera)" )
+            ->fetchAll(PDO::FETCH_ASSOC);
+
+        $dashboardMenu  = $this->database->query("SELECT id_action as id, 
+            url_action as url, icon, libelle_action as label, description_action as description 
+        FROM actions WHERE url_action='/v1/admin/dashboard'" )
+            ->fetch(PDO::FETCH_ASSOC);
+
+        $menu = array_merge(array($dashboardMenu), $menu);
+        return array_merge($user, ["actions"=>$actions, "menu"=>$menu]);
     }
 
     public function changePassowrd($id,$oldPassword, $newPassowrd){
