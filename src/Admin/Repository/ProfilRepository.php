@@ -23,14 +23,14 @@ class ProfilRepository  extends BaseRepository
             $params["level"] = 1;
             $libelle_action = $params["libelle"];
             if ($this->exists("LOWER(libelle_profil)='$libelle_action' AND level='1'")) {
-                throw new ActionException("Cette action existe déjà !");
+                throw new ProfilException("Ce profil existe déjà !");
             }
 
             $QUERY = "INSERT INTO profils (libelle_profil, level, created_by,updated_by)
                     VALUES (:libelle, :level, :createdBy, :updatedBy)";
             $this->database->prepare($QUERY)->execute($params);
             return $this->getOne($this->database->lastInsertId());
-        } catch (ActionException $exception) {
+        } catch (ProfilException $exception) {
             throw $exception;
         } catch (PDOException $exception) {
             throw $exception;
