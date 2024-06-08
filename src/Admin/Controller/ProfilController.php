@@ -33,7 +33,7 @@ class ProfilController extends BaseController
         $this->validate($params);
         $repository = new ProfilRepository;
         $action = $repository->update($id, $params);
-        return $this->jsonResponseWithData($response, "success", "Action modifiée avec succès", $action, 200);
+        return $this->jsonResponseWithData($response, "success", "Profil modifié avec succès", $action, 200);
     }
 
     public function getAll(Request $request, Response $response): Response
@@ -127,7 +127,7 @@ class ProfilController extends BaseController
         $parsedBody = (array)$request->getParsedBody();
         $this->validateActionsSaving($parsedBody);
         $actions = (array)$parsedBody["actions"];
-        $message = count($actions) > 1 ? "actions ajoutées avec succès" : "action ajoutée avec succès";
+        $message = count($actions) > 1 ? "actions rétirées avec succès" : "action rétirée avec succès";
         $actions = (new ProfilRepository)->deleteActions($id, $actions);
         return $this->jsonResponseWithData($response, "success", $message, $actions, 200);
     }

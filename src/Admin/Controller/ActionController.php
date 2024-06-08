@@ -83,6 +83,17 @@ class ActionController extends BaseController
             $methode = strtolower($queryParams["methode"]);
             $critere .= " AND LOWER(methode) LIKE '%$methode%'";
         }
+
+        if (isset($queryParams["isMenu"])) {
+            $isMenu = intval($queryParams["isMenu"]);
+            $critere .= " AND is_menu = $isMenu";
+        }
+
+        if (isset($queryParams["parent"])) {
+            $parent = intval($queryParams["parent"]);
+            $critere .= " AND parent = $parent";
+        }
+
         if (isset($queryParams["description"]) && !empty($queryParams["description"])) {
             $description = strtolower($queryParams["description"]);
             $critere .= " AND LOWER(description_action) LIKE '%$description%'";

@@ -77,7 +77,7 @@ $app->group('/v1/admin', function () use ($app): void {
         $app->get('/{id}', "App\Admin\Controller\ActionController:getOne");
         $app->put('/{id}', "App\Admin\Controller\ActionController:update");
         $app->delete('/{id}', "App\Admin\Controller\ActionController:delete");
-    })->add(new Auth);
+    });
     $app->group('/profils', function () use ($app): void {
         $app->group('/actions', function () use ($app): void {
             $app->get('/{id}', "App\Admin\Controller\ProfilController:getProfilActions");

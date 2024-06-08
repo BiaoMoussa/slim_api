@@ -89,8 +89,8 @@ class ActionRepository  extends BaseRepository
     public function getAll($critere = 'true', $page = 1, $perPage = 10)
     {
         $QUERY = "SELECT id_action as id, libelle_action as libelle, methode, 
-        url_action as url,description_action as description
-        FROM actions WHERE 1 AND $critere";
+        url_action as url,description_action as description, icon
+        FROM actions WHERE level = 1 AND $critere";
 
         return  $this->getResultsWithPagination($QUERY, $page, $perPage);
     }
@@ -98,7 +98,7 @@ class ActionRepository  extends BaseRepository
     public function getOne($id, $critere = 'true')
     {
         $QUERY = "SELECT id_action as id, libelle_action as libelle, methode, 
-        url_action as url,description_action as description 
+        url_action as url,description_action as description, icon 
         FROM actions WHERE id_action=$id AND $critere";
         $action = $this->database->query($QUERY)->fetch(PDO::FETCH_ASSOC);
         if (empty($action)) {

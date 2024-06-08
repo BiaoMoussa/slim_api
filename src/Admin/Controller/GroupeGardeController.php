@@ -24,8 +24,8 @@ class GroupeGardeController extends BaseController
         unset($params["userLogged"]);
         $this->validate($params);
         $repository = new GroupeGardeRepository;
-        $pharmacie = $repository->insert($params);
-        return $this->jsonResponseWithData($response, "success", "Action ajoutée avec succès", $pharmacie, 201);
+        $groupe = $repository->insert($params);
+        return $this->jsonResponseWithData($response, "success", "Groupe ajouté avec succès", $groupe, 201);
     }
 
     public function update(Request $request, Response $response, array $args): Response
@@ -37,8 +37,8 @@ class GroupeGardeController extends BaseController
         unset($params["userLogged"]);
         $this->validate($params);
         $repository = new GroupeGardeRepository;
-        $pharmacie = $repository->update($id, $params);
-        return $this->jsonResponseWithData($response, "success", "Action modifiée avec succès", $pharmacie, 200);
+        $groupe = $repository->update($id, $params);
+        return $this->jsonResponseWithData($response, "success", "Groupe modifié avec succès", $groupe, 200);
     }
 
     public function getAll(Request $request, Response $response): Response
@@ -115,9 +115,9 @@ class GroupeGardeController extends BaseController
     {
         $id = $args["id"];
         $parsedBody = (array)$request->getParsedBody();
-        $this->validateActionsSaving($parsedBody);
+        $this->validatePharmaciesSaving($parsedBody);
         $pharmacies = (array)$parsedBody["pharmacies"];
-        $message = count($pharmacies) > 1 ? "pharmacies ajoutées avec succès" : "pharmacie ajoutée avec succès";
+        $message = count($pharmacies) > 1 ? "Pharmacies ajoutées avec succès" : "Pharmacie ajoutée avec succès";
         $pharmacies = (new GroupeGardeRepository)->addGroupePharmacies($id, $pharmacies);
         return $this->jsonResponseWithData($response, "success", $message, $pharmacies, 200);
     }
@@ -126,14 +126,14 @@ class GroupeGardeController extends BaseController
     {
         $id = $args["id"];
         $parsedBody = (array)$request->getParsedBody();
-        $this->validateActionsSaving($parsedBody);
+        $this->validatePharmaciesSaving($parsedBody);
         $pharmacies = (array)$parsedBody["pharmacies"];
-        $message = count($pharmacies) > 1 ? "pharmacies ajoutées avec succès" : "pharmacie ajoutée avec succès";
+        $message = count($pharmacies) > 1 ? "Pharmacies retirées avec succès" : "Pharmacie rétirée avec succès";
         $pharmacies = (new GroupeGardeRepository)->deleteGroupePharmacies($id, $pharmacies);
         return $this->jsonResponseWithData($response, "success", $message, $pharmacies, 200);
     }
 
-    private function validateActionsSaving($parsedBody)
+    private function validatePharmaciesSaving($parsedBody)
     {
         $this->required($parsedBody, "pharmacies", new GroupeGardeException("pharmacies est obligatoire"));
         if (empty($parsedBody)) throw new GroupeGardeException("pharmacies ne peut être vide");
