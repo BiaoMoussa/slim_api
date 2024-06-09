@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Hôte : 127.0.0.1:3306
--- Généré le : dim. 09 juin 2024 à 12:04
+-- Généré le : dim. 09 juin 2024 à 15:56
 -- Version du serveur : 8.2.0
 -- Version de PHP : 8.0.30
 
@@ -67,10 +67,10 @@ INSERT INTO `actions` (`id_action`, `libelle_action`, `description_action`, `met
 (18, 'Réinitialiser le mot de passe', '', 'post', '/v1/admin/users/resetPassword', 1, 15, NULL, 0),
 (19, 'Changer état profil', '', 'put', '/v1/admin/profils/setStatus', 1, 15, NULL, 0),
 (20, 'Consulter les actions  profil', '', 'get', '/v1/admin/profils/actions', 1, 15, NULL, 0),
-(21, 'Ajouter une categorie', '', 'post', '/v1/admin/categories', 1, 23, NULL, 0),
-(22, 'Modifier une categorie', '', 'put', '/v1/admin/categories', 1, 23, NULL, 0),
+(21, 'Ajouter une categorie', '', 'post', '/v1/admin/categories', 1, 27, NULL, 0),
+(22, 'Modifier une categorie', '', 'put', '/v1/admin/categories', 1, 27, NULL, 0),
 (23, 'Categories', '', 'get', '/v1/admin/categories', 1, 27, NULL, 0),
-(24, 'Supprimer une categorie', '', 'delete', '/v1/admin/categorie', 1, 23, NULL, 0),
+(24, 'Supprimer une categorie', '', 'delete', '/v1/admin/categories', 1, 27, NULL, 0),
 (25, 'Ajouter un produit', '', 'post', '/v1/admin/produits', 1, 27, NULL, 0),
 (26, 'Modifier un produit', '', 'put', '/v1/admin/produits', 1, 27, NULL, 0),
 (27, 'Gestion des Produits', '', 'get', '/v1/admin/produits', 1, NULL, 'fa-solid fa-pills', 1),
@@ -112,7 +112,7 @@ CREATE TABLE IF NOT EXISTS `categories` (
   `modified_by` int DEFAULT NULL,
   `modified_at` datetime DEFAULT NULL,
   PRIMARY KEY (`id_categorie`)
-) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb3;
+) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=utf8mb3;
 
 --
 -- Déchargement des données de la table `categories`
@@ -123,9 +123,7 @@ INSERT INTO `categories` (`id_categorie`, `code_categorie`, `libelle_categorie`,
 (2, 'ACCRES    ', 'ACCESSOIRES', '2023-09-27 15:41:44', 1, 1, '2023-09-27 15:41:44'),
 (3, 'LUNETTES  ', 'Verres correcteurs', '2023-09-27 15:43:23', NULL, NULL, '2023-09-27 15:43:23'),
 (6, 'Conseils  ', 'Conseils Au Clients', '2023-09-27 16:10:27', 1, 1, '2023-09-27 16:10:27'),
-(8, 'Beaute', 'Produits de beauté', '2023-09-27 15:43:23', 1, 1, '2023-09-27 15:43:23'),
-(10, 'teste', 'teste', '2024-02-07 11:43:22', 6, NULL, NULL),
-(11, 'teste', 'teste', '2024-02-07 12:58:53', 6, NULL, NULL);
+(8, 'Beauté', 'Produits de beauté', '2023-09-27 15:43:23', 1, 1, '2023-09-27 15:43:23');
 
 -- --------------------------------------------------------
 
@@ -287,7 +285,7 @@ CREATE TABLE IF NOT EXISTS `produits` (
   `modified_at` datetime DEFAULT NULL,
   PRIMARY KEY (`id_produit`),
   KEY `fk_produits_categories` (`id_categorie`)
-) ENGINE=InnoDB AUTO_INCREMENT=5052 DEFAULT CHARSET=utf8mb3;
+) ENGINE=InnoDB AUTO_INCREMENT=5054 DEFAULT CHARSET=utf8mb3;
 
 --
 -- Déchargement des données de la table `produits`
@@ -4221,7 +4219,7 @@ CREATE TABLE IF NOT EXISTS `profils` (
 --
 
 INSERT INTO `profils` (`id_profil`, `libelle_profil`, `level`, `statut`, `id_societe`, `created_at`, `created_by`, `updated_at`, `updated_by`, `type`) VALUES
-(3, 'Administrateur', 1, 1, NULL, '2024-02-06 18:34:26', 1, '2024-06-08 19:02:16', 15, NULL),
+(3, 'Administrateur', 1, 1, NULL, '2024-02-06 18:34:26', 1, '2024-06-09 14:08:00', 15, NULL),
 (4, 'Groupe 5', 1, 1, NULL, '2024-06-07 16:29:53', 14, '2024-06-08 09:44:58', 15, NULL),
 (5, 'Groupe 2', 1, 1, NULL, '2024-06-08 09:35:40', 1, '2024-06-08 09:35:40', 1, NULL);
 
@@ -4294,7 +4292,10 @@ INSERT INTO `profil_has_actions` (`id_profil`, `id_action`) VALUES
 (3, 18),
 (3, 19),
 (3, 20),
+(3, 21),
+(3, 22),
 (3, 23),
+(3, 24),
 (3, 25),
 (3, 26),
 (3, 27),

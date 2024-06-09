@@ -26,7 +26,7 @@ class ProduitRepository extends BaseRepository
             FROM categories WHERE id_categorie='$id_categorie'";
             $categorie = $this->database->query($QUERY)->fetch(PDO::FETCH_ASSOC);
             if (empty($categorie)) {
-                throw new ProduitException("Categorie non trouvé.", 404);
+                throw new ProduitException("Categorie non trouvée.", 404);
             }
       
             $QUERY = "INSERT INTO produits
