@@ -196,4 +196,21 @@ class UserController extends BaseController
             // if(!preg_match("/^([a-z]+[A-Z]+[0-9]+)+$/", $params["login"])) throw new UserException("password doit comporter au moins une lettre majuscule, une lettre MAJUSCULE et un chiffre");
         }
     }
+
+    public function setStatus(Request $request, Response $response, array $args): Response{
+        $id = $args['id'];
+        $params = $request->getParsedBody();
+        unset($params["userLogged"]);
+        $this->required($params,"status",new UserException("status est obligatoire"));
+        if(isset($params["status"])){
+            if(is_null($params["status"])) throw new UserException("status ne peut être vide.");
+            if(!is_numeric($params["status"])) throw new UserException("status doit être un nombre entier.");
+            if($params["status"]!=0 && $params["status"]!=1) throw new UserException("status doit être 0:inactif ou 1:actif.");
+        }
+        $user = (new UserRepository())->setStatus($id, $params["status"]);
+        $message = "Utilisateur ";
+        $message .= ($params["status"]==1) ? "activé ":"désactivé";
+        $message .= " avec succès !";
+        return $this->jsonResponseWithData($response,"success",$message ,$user,200);
+    }
 }

@@ -98,6 +98,7 @@ $app->group('/v1/admin', function () use ($app): void {
         $app->post('/resetPassword/{id}', "App\Admin\Controller\UserController:resetPassword");
         $app->get('/{id}', "App\Admin\Controller\UserController:getOne");
         $app->put('/{id}', "App\Admin\Controller\UserController:update");
+        $app->put('/setStatus/{id}', "App\Admin\Controller\UserController:setStatus");
         $app->post('/changePassword', "App\Admin\Controller\UserController:changePassword");
         $app->delete('/{id}', "App\Admin\Controller\UserController:delete");
     })->add(new Auth);

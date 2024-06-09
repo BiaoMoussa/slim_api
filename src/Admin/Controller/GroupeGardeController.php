@@ -19,20 +19,20 @@ class GroupeGardeController extends BaseController
     public function add(Request $request, Response $response): Response
     {
         $params  = $request->getParsedBody();
-        $params["updatedBy"] = $params["userLogged"]["user"]->id??null;
-        $params["createdBy"] = $params["userLogged"]["user"]->id??null;
+        $params["updatedBy"] = $params["userLogged"]["user"]->id ?? null;
+        $params["createdBy"] = $params["userLogged"]["user"]->id ?? null;
         unset($params["userLogged"]);
         $this->validate($params);
         $repository = new GroupeGardeRepository;
         $groupe = $repository->insert($params);
-        return $this->jsonResponseWithData($response, "success", "Groupe ajouté avec succès", $groupe, 201);
+        return $this->jsonResponseWithData($response, "success", "Groupe ajouté avec succès", $groupe, 200 );
     }
 
     public function update(Request $request, Response $response, array $args): Response
     {
         $id = $args["id"];
         $params  = (array)$request->getParsedBody();
-        $params["updatedBy"] = $params["userLogged"]["user"]->id??null;
+        $params["updatedBy"] = $params["userLogged"]["user"]->id ?? null;
         $params["updatedAt"] = date("Y-m-d H:i:s");
         unset($params["userLogged"]);
         $this->validate($params);
@@ -54,6 +54,11 @@ class GroupeGardeController extends BaseController
         if (isset($queryParams["libelle"]) && !empty($queryParams["libelle"])) {
             $libelle = strtolower($queryParams["libelle"]);
             $critere .= " AND LOWER(libelle_groupe) LIKE '%$libelle%'";
+        }
+
+        if (isset($queryParams["statut"]) && ($queryParams["statut"] == "1" || $queryParams["statut"] == "0")) {
+            $statut = (int)$queryParams["statut"];
+            $critere .= " AND statut=$statut";
         }
 
         if (isset($queryParams["perPage"]) && !empty($queryParams["perPage"])) {
@@ -78,17 +83,18 @@ class GroupeGardeController extends BaseController
         return $this->jsonResponseWithoutMessage($response, 'success', $pharmacie, 200);
     }
 
-    public function setStatus(Request $request, Response $response, array $args): Response{
+    public function setStatus(Request $request, Response $response, array $args): Response
+    {
         $id = $args['id'];
         $params = $request->getParsedBody();
-        $this->required($params,"status",new GroupeGardeException("status est obligatoire"));
-        if(isset($params["status"])){
-            if(is_null($params["status"])) throw new GroupeGardeException("status ne peut être vide.");
-            if(!is_numeric($params["status"])) throw new GroupeGardeException("status doit être un nombre entier.");
-            if($params["status"]!=0 && $params["status"]!=1) throw new GroupeGardeException("status doit être 0:inactif ou 1:actif.");
+        $this->required($params, "status", new GroupeGardeException("status est obligatoire"));
+        if (isset($params["status"])) {
+            if (is_null($params["status"])) throw new GroupeGardeException("status ne peut être vide.");
+            if (!is_numeric($params["status"])) throw new GroupeGardeException("status doit être un nombre entier.");
+            if ($params["status"] != 0 && $params["status"] != 1) throw new GroupeGardeException("status doit être 0:inactif ou 1:actif.");
         }
         $profil = (new GroupeGardeRepository)->setStatus($id, $params["status"]);
-        return $this->jsonResponseWithData($response,"success","Statut mis à jour avec succès." ,$profil,200);
+        return $this->jsonResponseWithData($response, "success", "Statut mis à jour avec succès.", $profil, 200);
     }
     public function delete(Request $request, Response $response, array $args): Response
     {

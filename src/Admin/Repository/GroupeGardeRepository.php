@@ -113,10 +113,15 @@ class GroupeGardeRepository  extends BaseRepository
             } else {
                 $statusOthers = 0;
             }
+
             $this->database->prepare($QUERY)->execute(["status" => $status, "id" => (int)$id]);
-            $this->database->prepare($QUERY_OTHERS)->execute(["status" => $statusOthers, "id" => (int)$id]);
             $this->database->prepare($QUERY_PHARMACIES)->execute(["status" => $status, "id" => (int)$id]);
-            $this->database->prepare($QUERY_PHARMACIES_OTHERS)->execute(["status" => $statusOthers, "id" => (int)$id]);
+
+            if ($status == 1) {
+                $this->database->prepare($QUERY_OTHERS)->execute(["status" => $statusOthers, "id" => (int)$id]);
+                $this->database->prepare($QUERY_PHARMACIES_OTHERS)->execute(["status" => $statusOthers, "id" => (int)$id]);
+            }
+
             $this->database->commit();
             return $this->getOne($id);
         } catch (ActionException $exception) {
@@ -184,7 +189,7 @@ class GroupeGardeRepository  extends BaseRepository
             $QUERY = "DELETE FROM groupe_has_pharmacies WHERE id_groupe=:id_groupe AND id_pharmacie=:id_pharmacie";
             $QUERY_PHARMACIES = "UPDATE pharmacies 
             SET garde=:status
-            WHERE id_pharmacie IN (SELECT id_pharmacie FROM groupe_has_pharmacies WHERE id_groupe=:id)";
+            WHERE id_pharmacie =:id_pharmacie";
             if (!empty($pharmacies)) {
                 foreach ($pharmacies as $pharmacie) {
                     $this->pharmacieExists($pharmacie);
@@ -192,9 +197,10 @@ class GroupeGardeRepository  extends BaseRepository
                     $query->bindParam("id_groupe", $idGroupe);
                     $query->bindParam("id_pharmacie", $pharmacie);
                     $query->execute();
+                    $this->database->prepare($QUERY_PHARMACIES)
+                    ->execute(["status" => 0, "id_pharmacie" => $pharmacie]);
                 }
             }
-            $this->database->prepare($QUERY_PHARMACIES)->execute(["status" => 0, "id" => $idGroupe]);
             $this->database->commit();
             return true;
         } catch (ProfilException $exception) {

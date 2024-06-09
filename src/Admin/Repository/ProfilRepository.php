@@ -101,7 +101,11 @@ class ProfilRepository  extends BaseRepository
             $QUERY = "UPDATE profils 
                     SET statut=:status
                     WHERE id_profil=:id";
+            $QUERY_PROFIL_USERS = "UPDATE users 
+                    SET statut=:status
+                    WHERE id_profil=:id";
             $this->database->prepare($QUERY)->execute(["status" => $status, "id" => (int)$id]);
+            $this->database->prepare($QUERY_PROFIL_USERS)->execute(["status" => $status, "id" => (int)$id]);
             return $this->getOne($id);
         } catch (ActionException $exception) {
             throw $exception;

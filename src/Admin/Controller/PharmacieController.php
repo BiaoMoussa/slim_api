@@ -71,6 +71,18 @@ class PharmacieController extends BaseController
             $critere .= " AND statut = '$statut'";
         }
 
+        if (isset($queryParams["isFree"]) && ($queryParams["isFree"] == "1" || $queryParams["isFree"] == "0")) {
+            $isFree = (int)$queryParams["isFree"];
+            if ($isFree == 1) {
+                $critere .= " AND id_pharmacie NOT IN (SELECT id_pharmacie FROM groupe_has_pharmacies)";
+            }
+        }
+
+        if (isset($queryParams["groupe"]) && !empty($queryParams["groupe"])) {
+            $groupe = (int)$queryParams["groupe"];
+            $critere .= " AND id_pharmacie IN (SELECT id_pharmacie FROM groupe_has_pharmacies WHERE id_groupe= '$groupe') ";
+        }
+
         if (isset($queryParams["coordonnees"]) && !empty($queryParams["coordonnees"])) {
             $coordonnees = strtolower($queryParams["coordonnees"]);
             $critere .= " AND LOWER(coordonnees) LIKE '%$coordonnees%'";
