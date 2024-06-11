@@ -133,10 +133,10 @@ $app->group('/v1/admin', function () use ($app): void {
 
 
     $app->group('/pharmacies', function () use ($app): void {
-        $app->group("/produits", function () use ($app): void {
+        $app->group("/stock", function () use ($app): void {
             $app->get('', "App\Admin\Controller\PharmacieHasProduitController:getAll");
             $app->post('/{id}', "App\Admin\Controller\PharmacieHasProduitController:add");
-            $app->post('setStatus', "App\Admin\Controller\PharmacieHasProduitController:setStatus");
+            $app->put('/setStatus/{id}', "App\Admin\Controller\PharmacieHasProduitController:setStatus");
             $app->get('/{id}', "App\Admin\Controller\PharmacieHasProduitController:getOne");
             $app->get('/find_one_pharmacie/{id}', "App\Admin\Controller\PharmacieHasProduitController:getPharamacieProduits");
             $app->put('/{id}', "App\Admin\Controller\PharmacieHasProduitController:update");
