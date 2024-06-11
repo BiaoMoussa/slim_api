@@ -57,11 +57,11 @@ class UserController extends BaseController
         $critere = "true AND id_pharmacie='$pharmacie'";
         if (isset($queryParams["id"]) && !is_null($queryParams["id"])) {
             $idUser = $queryParams["id"];
-            $critere .= "AND id_user='$idUser' ";
+            $critere .= "AND users.id_user='$idUser' ";
         }
         if (isset($queryParams["profil"]) && !is_null($queryParams["profil"])) {
             $profilUser = $queryParams["profil"];
-            $critere .= "AND id_profil='$profilUser' ";
+            $critere .= "AND users.id_profil='$profilUser' ";
         }
         if (isset($queryParams["nom"]) && !is_null($queryParams["nom"])) {
             $nomUser = strtolower($queryParams["nom"]);

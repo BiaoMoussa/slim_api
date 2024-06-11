@@ -166,6 +166,7 @@ class PharmacieRepository  extends BaseRepository
         $params["password"] = $params["password"] ?? "Default2024";
         $actions = $this->database->query("SELECT id_action FROM actions WHERE level='2'")->fetchAll(PDO::FETCH_COLUMN); // Récupération des actions de level 2
         try {
+            $this->database->beginTransaction();
             $profil["libelle"] = $libelle_profile;
             $profil["createdBy"] = $params["createdBy"];
             $profil["updatedBy"] = $params["updatedBy"];
@@ -178,10 +179,12 @@ class PharmacieRepository  extends BaseRepository
             if (count($actions) > 0) {
                 (new ProfilRepository)->addActions($idProfil, $actions);
             }
+            $this->database->commit();
             return $admin;
         } catch (PharmacieException $exception) {
             throw $exception;
         } catch (PDOException $exception) {
+            $this->database->rollBack();
             throw $exception;
         }
     }
@@ -201,6 +204,7 @@ class PharmacieRepository  extends BaseRepository
             if (count($actions) > 0) { // on profite pour mettre à jour la liste des actions.
                 (new ProfilRepository)->addActions($admin["profil"], $actions);
             }
+            $admin["pharmacie"] = $id;
             return (new UserRepository)->update($id, $admin);
         } catch (PharmacieException $exception) {
             throw $exception;

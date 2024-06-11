@@ -129,7 +129,7 @@ class UserRepository extends BaseRepository
     {
         $QUERY = "SELECT id_user as id, nom_user as nom, prenom_user as prenom, 
         login ,users.id_profil as profil, libelle_profil, users.statut as statut
-        FROM users, profils WHERE users.id_profil=profils.id_profil  AND $critere";
+        FROM users, profils WHERE users.id_profil=profils.id_profil  AND profils.level=1 AND $critere";
         return  $this->getResultsWithPagination($QUERY, $page, $perPage);;
     }
 
@@ -137,13 +137,13 @@ class UserRepository extends BaseRepository
     {
         $QUERY = "SELECT id_user as id, nom_user as nom, prenom_user as prenom, 
         login ,users.id_profil as profil, libelle_profil ,users.statut as statut
-        FROM users, profils WHERE users.id_profil=profils.id_profil AND id_user='$id' AND $critere";
+        FROM users, profils WHERE users.id_profil=profils.id_profil AND profils.level=1 AND id_user='$id' AND $critere";
         $user = $this->database->query($QUERY)->fetch(PDO::FETCH_ASSOC);
         if (empty($user)) {
             throw new UserException("User non trouvé.", 404);
         }
         $idProfil = $user['profil'];
-        $subCritera = "id_action IN (SELECT id_action FROM profil_has_actions WHERE id_profil='$idProfil')";
+        $subCritera = "id_action IN (SELECT id_action FROM profil_has_actions WHERE id_profil='$idProfil') AND level=1 ";
 
         $actions = $this->database->query("SELECT url_action as url, methode 
                                     FROM actions WHERE $subCritera")

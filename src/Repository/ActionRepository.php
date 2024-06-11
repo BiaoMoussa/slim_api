@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace App\Admin\Repository;
+namespace App\Repository;
 
 
-use App\Admin\Exception\ActionException;
+use App\Exception\ActionException;
 use PDO;
 use PDOException;
 
@@ -19,12 +19,12 @@ class ActionRepository  extends BaseRepository
     public function insert($params = [])
     {
         try {
-            $params["level"] = 1;
+            $params["level"] = 2;
             $libelle_action = $params["libelle"];
             $methode = $params["methode"];
             $url = $params["url"];
             $params["description"] = isset($params["description"]) ? $params["description"] : "";
-            if ($this->exists("libelle_action='$libelle_action' AND methode='$methode' AND url_action='$url'")) {
+            if ($this->exists("libelle_action='$libelle_action' AND methode='$methode' AND url_action='$url' AND level=2")) {
                 throw new ActionException("Cette action existe déjà !");
             }
             $QUERY = "INSERT INTO actions (libelle_action, description_action, methode, url_action, level)
@@ -42,7 +42,7 @@ class ActionRepository  extends BaseRepository
     {
         try {
             $action = $this->getOne($id);
-            $params["level"] = 1;
+            $params["level"] = 2;
             $params["id"] = $id;
             $params["description"] =  $params["description"] ?? $action["description"];
             $params["libelle"] =  $params["libelle"] ?? $action["libelle"];
@@ -75,7 +75,7 @@ class ActionRepository  extends BaseRepository
 
     public function delete($id, $critere = "true")
     {
-        $QUERY = "DELETE FROM actions WHERE id_action=$id AND level=1 AND $critere";
+        $QUERY = "DELETE FROM actions WHERE id_action=$id AND level=2 AND $critere";
         try {
             $this->getOne($id);
             $this->database->query($QUERY)->execute();
@@ -90,7 +90,7 @@ class ActionRepository  extends BaseRepository
     {
         $QUERY = "SELECT id_action as id, libelle_action as libelle, methode, 
         url_action as url,description_action as description, icon
-        FROM actions WHERE level = 1 AND $critere";
+        FROM actions WHERE level = 2 AND $critere";
 
         return  $this->getResultsWithPagination($QUERY, $page, $perPage);
     }
@@ -99,7 +99,7 @@ class ActionRepository  extends BaseRepository
     {
         $QUERY = "SELECT id_action as id, libelle_action as libelle, methode, 
         url_action as url,description_action as description, icon 
-        FROM actions WHERE id_action=$id AND level=1 AND $critere";
+        FROM actions WHERE id_action=$id AND level=2 AND $critere";
         $action = $this->database->query($QUERY)->fetch(PDO::FETCH_ASSOC);
         if (empty($action)) {
             throw new ActionException("Action non trouvée", 404);
@@ -109,7 +109,7 @@ class ActionRepository  extends BaseRepository
 
     public function exists($critere = 'true'): bool
     {
-        $QUERY = "SELECT * FROM actions WHERE  $critere AND level=1";
+        $QUERY = "SELECT * FROM actions WHERE  $critere AND level=2";
         return  $this->database->query($QUERY)->rowCount() > 0;
     }
 }

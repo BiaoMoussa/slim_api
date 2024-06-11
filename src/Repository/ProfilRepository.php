@@ -21,15 +21,16 @@ class ProfilRepository  extends BaseRepository
     {
         try {
             $params["level"] = 2;
-            $libelle_action = $params["libelle"];
-            if ($this->exists("LOWER(libelle_profil)='$libelle_action' AND level='2'")) {
-                throw new ActionException("Cette action existe déjà !");
+            $libelle_profil = $params["libelle"];
+            $id_pharmacie = $params["pharmacie"];
+            if ($this->exists("LOWER(libelle_profil)='$libelle_profil' AND level='2' AND id_societe='$id_pharmacie'")) {
+                throw new ProfilException("Ce profil existe déjà !");
             }
             $QUERY = "INSERT INTO profils (libelle_profil, level,id_societe, created_by,updated_by)
                     VALUES (:libelle, :level,:pharmacie, :createdBy, :updatedBy)";
             $this->database->prepare($QUERY)->execute($params);
             return $this->getOne($this->database->lastInsertId());
-        } catch (ActionException $exception) {
+        } catch (ProfilException $exception) {
             throw $exception;
         } catch (PDOException $exception) {
             throw $exception;
@@ -39,14 +40,15 @@ class ProfilRepository  extends BaseRepository
     public function update($id, $params, $crietre = '')
     {
         try {
+            $id_pharmacie = $params["pharmacie"];
             $profil =  $this->getOne($id);
             $params["level"] = 2;
             $params["id"] = $id;
             $params["libelle"] = isset($params["libelle"]) ? $params["libelle"] : $profil["libelle"];
             $libelle_profil = $params["libelle"];
             if ($libelle_profil != $profil["libelle"]) {
-                if ($this->exists("LOWER(libelle_profil)='$libelle_profil' AND level='2'")) {
-                    throw new ActionException("Cette action existe déjà !");
+                if ($this->exists("LOWER(libelle_profil)='$libelle_profil' AND level='2' AND id_societe='$id_pharmacie'")) {
+                    throw new ProfilException("Ce profil existe déjà !");
                 }
             }
             
@@ -58,7 +60,7 @@ class ProfilRepository  extends BaseRepository
                     WHERE id_profil=:id AND id_societe=:pharmacie";
             $this->database->prepare($QUERY)->execute($params);
             return $this->getOne($id);
-        } catch (ActionException $exception) {
+        } catch (ProfilException $exception) {
             throw $exception;
         } catch (PDOException $exception) {
             throw $exception;
@@ -71,7 +73,7 @@ class ProfilRepository  extends BaseRepository
         try {
             $this->getOne($id);
             $this->database->query($QUERY)->execute();
-        } catch (ActionException $exception) {
+        } catch (ProfilException $exception) {
             throw $exception;
         } catch (PDOException $exception) {
             throw $exception;
@@ -181,7 +183,7 @@ class ProfilRepository  extends BaseRepository
 
     public function relationExists($idProfil, $idAction)
     {
-       return $control_existence_liaison = $this->database
+       return  $this->database
             ->query("SELECT * FROM profil_has_actions WHERE id_action='$idAction' AND id_profil='$idProfil'")
             ->rowCount() > 0;
     }

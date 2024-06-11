@@ -109,10 +109,11 @@ class PharmacieController extends BaseController
         $params = $request->getParsedBody();
         $params["updatedBy"] = $params["userLogged"]["user"]->id ?? null;
         $params["createdBy"] = $params["userLogged"]["user"]->id ?? null;
+        $defaultPassword = empty($params["password"])? "(password:Default2024)": "";
         unset($params["userLogged"]);
         $this->validateAdmin($params);
         $admin = (new PharmacieRepository)->addAdmin($id, $params);
-        return $this->jsonResponseWithData($response, "success", "Admin créé avec succès(password:Default2024)", $admin, 200);
+        return $this->jsonResponseWithData($response, "success", "Admin créé avec succès ".$defaultPassword, $admin, 200);
     }
 
     public function updateAdmin(Request $request, Response $response, array $args): Response

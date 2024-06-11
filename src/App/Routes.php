@@ -36,6 +36,14 @@ $app->get('/error', "App\Controller\UserController:handleError");
  */
 
 $app->group('/v1', function () use ($app): void {
+    // Actions pour pour les pharmacies
+    $app->group('/actions', function () use ($app): void {
+        $app->get('', "App\Controller\ActionController:getAll");
+        $app->post('', "App\Controller\ActionController:add");
+        $app->get('/{id}', "App\Controller\ActionController:getOne");
+        $app->put('/{id}', "App\Controller\ActionController:update");
+        $app->delete('/{id}', "App\Controller\ActionController:delete");
+    });
     $app->group('/users', function () use ($app): void {
         $app->get('', "App\Controller\UserController:getAll");
         $app->post('', "App\Controller\UserController:add");
@@ -78,6 +86,7 @@ $app->group('/v1/admin', function () use ($app): void {
         $app->put('/{id}', "App\Admin\Controller\ActionController:update");
         $app->delete('/{id}', "App\Admin\Controller\ActionController:delete");
     });
+    
     $app->group('/profils', function () use ($app): void {
         $app->group('/actions', function () use ($app): void {
             $app->get('/{id}', "App\Admin\Controller\ProfilController:getProfilActions");
