@@ -69,10 +69,8 @@ $app->group('/v1', function () use ($app): void {
     })->add(new Auth);
 
     $app->group('/parametres', function () use ($app): void {
-        $app->group('/pharmacie', function () use ($app): void {
-            $app->get('/{id}', "App\Admin\Controller\PharmacieController:getOne");
-            $app->put('/{id}', "App\Admin\Controller\PharmacieController:update");
-        });
+        $app->get('/{id}', "App\Admin\Controller\PharmacieController:getOne");
+        $app->put('/{id}', "App\Admin\Controller\PharmacieController:update");
        
     })->add(new Auth);
 });

@@ -178,13 +178,22 @@ class PharmacieController extends BaseController
         if (isset($params["nom"])) {
             if (strlen($params["nom"]) < 3) throw new PharmacieException("nom doit avoir au moins 3 caractères.");
         }
+        if (isset($params["observation"])) {
+            if (strlen($params["observation"]) < 3) throw new PharmacieException("observation doit avoir au moins 3 caractères.");
+        }
         if (isset($params["telephone"])) {
             if (strlen($params["telephone"]) != 8) throw new PharmacieException("telephone doit avoir  8 caractères.");
             if (!is_numeric($params["telephone"])) throw new PharmacieException("telephone au mauvais format.");
         }
+        
+        if(isset($params["coordonnees"]) && !empty($params["coordonnees"])){
+            $this->isGeolocationCoordinatesValid($params["coordonnees"], new PharmacieException("Coordonnées géographiques incorrectes"));
+        }
+
         if (isset($params["adresse"])) {
             if (strlen($params["adresse"]) < 2) throw new PharmacieException("adresse doit avoir au moins 2 caractères.");
         }
+        
     }
 
     private function  validateAdmin($params)
