@@ -23,7 +23,7 @@ final class Auth extends Base
             throw new ExceptionAuth('JWT Token required.', 400);
         }
         $jwt = explode('Bearer ', $jwtHeader);
-
+       
         if (!isset($jwt[1])) {
             throw new ExceptionAuth('JWT Token invalid.', 400);
         }
@@ -38,6 +38,7 @@ final class Auth extends Base
         $urlToMatch->methode = $method;
         $permission_accordee = in_array($urlToMatch, $decoded["user"]->actions);  
         if (!$permission_accordee) {
+            
             throw new ExceptionAuth('Forbidden: Accès interdit à cette url.', 403);
         }
         return $next($request->withParsedBody($object), $response);

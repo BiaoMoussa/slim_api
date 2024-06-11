@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Repository;
 
 
-use App\Admin\Exception\ActionException;
+
 use App\Exception\ProfilException;
 use PDO;
 use PDOException;
@@ -89,11 +89,12 @@ class ProfilRepository  extends BaseRepository
     public function getOne($id, $critere = 'true')
     {
         $QUERY = "SELECT id_profil as id, libelle_profil as libelle, statut FROM profils WHERE id_profil=$id AND $critere";
-        $action = $this->database->query($QUERY)->fetch(PDO::FETCH_ASSOC);
-        if (empty($action)) {
-            throw new ActionException("Profil non trouvé", 404);
+       
+        $profil = $this->database->query($QUERY)->fetch(PDO::FETCH_ASSOC);
+        if (empty($profil)) {
+            throw new ProfilException("Profil non trouvé", 404);
         }
-        return $action;
+        return $profil;
     }
     public function setStatus($id, $params)
     {
@@ -106,7 +107,7 @@ class ProfilRepository  extends BaseRepository
                     WHERE id_profil=:id";
             $this->database->prepare($QUERY)->execute(["status" => $status, "id" => (int)$id]);
             return $this->getOne($id, "id_societe='$pharmacie'");
-        } catch (ActionException $exception) {
+        } catch (ProfilException $exception) {
             throw $exception;
         } catch (PDOException $exception) {
             throw $exception;

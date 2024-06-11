@@ -19,7 +19,7 @@ class UserRepository extends BaseRepository
         $login = trim(strtolower($params["login"]));
         $password = $params["password"];
         $query = "SELECT id_user as id, nom_user as nom, prenom_user as prenom, 
-        login ,id_profil as profil, password, id_pharmacie as pharmacie FROM users WHERE LOWER(login)=:login";
+        login ,id_profil as profil, password, id_pharmacie as pharmacie, statut FROM users WHERE LOWER(login)=:login";
         $statement = $this->database->prepare($query);
         $statement->bindParam('login', $login);
         $statement->execute();
@@ -49,7 +49,9 @@ class UserRepository extends BaseRepository
                                     (SELECT id_action FROM profil_has_actions, profils
                                          WHERE profil_has_actions.id_profil='$idProfil' )")
             ->fetchAll(PDO::FETCH_ASSOC);
-        return array_merge($user, ["actions" => $actions]);
+           
+         return array_merge($user, ["actions" => $actions]);
+         
     }
 
     public function insert($params = [])
@@ -127,16 +129,16 @@ class UserRepository extends BaseRepository
     public function getAll($critere = '', $page = 1, $perPage = 10)
     {
         $QUERY = "SELECT id_user as id, nom_user as nom, prenom_user as prenom, 
-        login ,users.id_profil as profil,libelle_profil, id_pharmacie as pharmacie
+        login ,users.id_profil as profil,libelle_profil, id_pharmacie as pharmacie, users.statut
         FROM users, profils WHERE users.id_profil=profils.id_profil AND profils.level=2
           AND $critere";
-        return  $this->getResultsWithPagination($QUERY, $page, $perPage);;
+        return  $this->getResultsWithPagination($QUERY, $page, $perPage);
     }
 
     public function getOne($id, $critere = 'true')
     {
         $QUERY = "SELECT id_user as id, nom_user as nom, prenom_user as prenom, 
-        login ,users.id_profil as profil, libelle_profil, id_pharmacie as pharmacie
+        login ,users.id_profil as profil, libelle_profil, id_pharmacie as pharmacie, users.statut
         FROM users, profils WHERE users.id_profil=profils.id_profil AND profils.level=2
          AND users.id_user='$id'  AND $critere";
         $user = $this->database->query($QUERY)->fetch(PDO::FETCH_ASSOC);
