@@ -27,11 +27,28 @@ class PharmacieRepository  extends BaseRepository
             if ($this->exists("LOWER(nom_pharmacie)='$nom' || telephone='$telphone'")) {
                 throw new PharmacieException("Cette pharmacie existe déjà.");
             }
+            $this->database->beginTransaction();
+
             $QUERY = "INSERT INTO pharmacies(nom_pharmacie,telephone,adresse,coordonnees,observation,created_by,modified_by)
                 VALUES (:nom,:telephone,:adresse,:coordonnees,:observation,:createdBy,:updatedBy)";
             $this->database->prepare($QUERY)->execute($params);
-            return $this->getOne($this->database->lastInsertId());
+
+            $idPharmacie = $this->database->lastInsertId();
+
+
+            // Association des produits à la pharmacie créée
+            $createdBy = $params["createdBy"];
+            $updatedBy = $params["updatedBy"];
+            $QUERY_MAPPING_PHARMACIE_PRODUIT = "INSERT INTO pharmacie_has_produits (id_pharmacie,id_produit,created_by,modified_by)
+            SELECT :id_pharmacie, id_produit,:created_by,:updated_by  FROM produits";
+            $mapping_params = ["id_pharmacie" => $idPharmacie, "created_by" => $createdBy, "updated_by" => $updatedBy];
+            $this->database->prepare($QUERY_MAPPING_PHARMACIE_PRODUIT)->execute($mapping_params);
+            $this->database->commit();
+            return $this->getOne($idPharmacie);
+        } catch (PharmacieException $pharmacieException) {
+            throw $pharmacieException;
         } catch (PDOException $exception) {
+            $this->database->rollBack();
             throw $exception;
         }
     }
@@ -136,12 +153,12 @@ class PharmacieRepository  extends BaseRepository
         $pharmacie = $this->getOne($id);
         $QUERY_FIND_ADMIN = "SELECT * FROM users WHERE id_pharmacie='$id' ORDER BY id_user ASC LIMIT 1";
         $admin_exits = $this->database->query($QUERY_FIND_ADMIN)->rowCount() > 0;
-        if($admin_exits) {
-            throw new PharmacieException("Admin existe déjà.",400);
+        if ($admin_exits) {
+            throw new PharmacieException("Admin existe déjà.", 400);
         }
-      
+
         $params["nom"] = $params["nom"] ?? "Nom admin " . $pharmacie["nom"];
-        $nom_tab = explode(" ",strtolower($params["nom"]));
+        $nom_tab = explode(" ", strtolower($params["nom"]));
         $nom_sans_esapce = join("", $nom_tab);
         $libelle_profile = "profilAdmin-" . strtolower(trim($params["nom"]));
         $params["prenom"] = $params["prenom"] ?? "Prénom admin " . $pharmacie["nom"];
@@ -149,6 +166,7 @@ class PharmacieRepository  extends BaseRepository
         $params["password"] = $params["password"] ?? "Default2024";
         $actions = $this->database->query("SELECT id_action FROM actions WHERE level='2'")->fetchAll(PDO::FETCH_COLUMN); // Récupération des actions de level 2
         try {
+            $this->database->beginTransaction();
             $profil["libelle"] = $libelle_profile;
             $profil["createdBy"] = $params["createdBy"];
             $profil["updatedBy"] = $params["updatedBy"];
@@ -158,13 +176,15 @@ class PharmacieRepository  extends BaseRepository
             $params["pharmacie"] = $id;
             $params["profil"] = $insertedProfil["id"];
             $admin = (new UserRepository)->insert($params);
-            if(count($actions) > 0) {
+            if (count($actions) > 0) {
                 (new ProfilRepository)->addActions($idProfil, $actions);
             }
+            $this->database->commit();
             return $admin;
         } catch (PharmacieException $exception) {
             throw $exception;
         } catch (PDOException $exception) {
+            $this->database->rollBack();
             throw $exception;
         }
     }
@@ -178,12 +198,13 @@ class PharmacieRepository  extends BaseRepository
             $admin["nom"] = $params["nom"] ?? $admin["nom"];
             $admin["prenom"] = $params["prenom"] ?? $admin["prenom"];
             $admin["login"] = $params["login"] ?? $admin["login"];
-            $admin["updatedAt"] = $params["updatedAt"] ;
-            $admin["updatedBy"] = $params["updatedBy"] ;
+            $admin["updatedAt"] = $params["updatedAt"];
+            $admin["updatedBy"] = $params["updatedBy"];
             $actions = $this->database->query("SELECT id_action FROM actions WHERE level='2'")->fetchAll(PDO::FETCH_COLUMN); // Récupération des actions de level 2
-            if(count($actions) > 0) { // on profite pour mettre à jour la liste des actions.
+            if (count($actions) > 0) { // on profite pour mettre à jour la liste des actions.
                 (new ProfilRepository)->addActions($admin["profil"], $actions);
             }
+            $admin["pharmacie"] = $id;
             return (new UserRepository)->update($id, $admin);
         } catch (PharmacieException $exception) {
             throw $exception;

@@ -55,6 +55,11 @@ class ProfilController extends BaseController
             $critere .= " AND LOWER(libelle_profil) LIKE '%$libelle%'";
         }
 
+        if (isset($queryParams["statut"]) && ($queryParams["statut"]=="1" || $queryParams["statut"]=="0")) {
+            $statut = (int)$queryParams["statut"];
+            $critere .= " AND statut='$statut' ";
+        }
+
         if (isset($queryParams["perPage"]) && !empty($queryParams["perPage"])) {
             $perPage = (int)$queryParams["perPage"];
         } else {

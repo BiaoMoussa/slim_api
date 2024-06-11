@@ -57,11 +57,11 @@ class UserController extends BaseController
         $critere = "true AND id_pharmacie='$pharmacie'";
         if (isset($queryParams["id"]) && !is_null($queryParams["id"])) {
             $idUser = $queryParams["id"];
-            $critere .= "AND id_user='$idUser' ";
+            $critere .= "AND users.id_user='$idUser' ";
         }
         if (isset($queryParams["profil"]) && !is_null($queryParams["profil"])) {
             $profilUser = $queryParams["profil"];
-            $critere .= "AND id_profil='$profilUser' ";
+            $critere .= "AND users.id_profil='$profilUser' ";
         }
         if (isset($queryParams["nom"]) && !is_null($queryParams["nom"])) {
             $nomUser = strtolower($queryParams["nom"]);
@@ -193,7 +193,7 @@ class UserController extends BaseController
         if (isset($params["login"]) && !is_null($params["login"])) {
             if (!is_string($params["login"])) throw new UserException("login doit être une chaine de caractère");
             if (strlen($params["login"]) <= 2) throw new UserException("login doit avoir au moins 3 caractères");
-            if (!preg_match("/^([a-z]+)+$/", $params["login"])) throw new UserException("login ne doit comporter que des les lettre de a à z sans accent.");
+            if (!preg_match("/^([a-zA-Z0-9.]+)+$/", $params["login"])) throw new UserException("login ne doit comporter que des les lettre de a à z sans accent.");
         }
 
         if (isset($params["profil"]) && !is_null($params["profil"])) {

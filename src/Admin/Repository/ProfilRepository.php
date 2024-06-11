@@ -137,7 +137,9 @@ class ProfilRepository  extends BaseRepository
             if (!empty($actions)) {
                 foreach ($actions as $action) {
                     $this->actionsExists($action);
-                    $this->relationExists($idProfil, $action);
+                    if ($this->relationExists($idProfil, $action)) {
+                        continue;
+                    }
                     $query = $this->database->prepare($QUERY);
                     $query->bindParam("id_profil", $idProfil);
                     $query->bindParam("id_action", $action);
@@ -183,12 +185,9 @@ class ProfilRepository  extends BaseRepository
 
     public function relationExists($idProfil, $idAction)
     {
-        $control_existence_liaison = $this->database
+        return $this->database
             ->query("SELECT * FROM profil_has_actions WHERE id_action='$idAction' AND id_profil='$idProfil'")
             ->rowCount() > 0;
-        if ($control_existence_liaison) {
-            throw new ProfilException("L'action $idAction est déjà dans la liste des actions du profil $idProfil.");
-        }
     }
 
     private function actionsExists($idAction)
