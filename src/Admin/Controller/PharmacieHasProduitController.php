@@ -65,6 +65,21 @@ class PharmacieHasProduitController extends BaseController
             $produit = $queryParams["produit"];
             $critere .= " AND php.id_produit='$produit'";
         }
+
+        if (isset($queryParams["statut"]) ) {
+            $statut = $queryParams["statut"];
+            $critere .= " AND php.statut='$statut'";
+        }
+
+        if (isset($queryParams["categorie"]) && !empty($queryParams["categorie"])) {
+            $categorie = $queryParams["categorie"];
+            $critere .= " AND pr.id_categorie='$categorie'";
+        }
+
+        if (isset($queryParams["designation"]) && !empty($queryParams["designation"])) {
+            $designation = $queryParams["designation"];
+            $critere .= " AND pr.designation LIKE '%$designation%'";
+        }
         
 
         if (isset($queryParams["perPage"]) && !empty($queryParams["perPage"])) {
@@ -97,22 +112,23 @@ class PharmacieHasProduitController extends BaseController
 
     public function setStatus(Request $request, Response $response, array $args): Response{
         
-        $params  = $request->getParsedBody();
-        // var_dump($params); die;
-        
-        $pharmacie=$params["userLogged"]["user"]->pharmacie;
-        $critere="true";
-        if ($pharmacie > 0) {
-            $critere="php.id_pharmacie=$pharmacie ";
-        }
-        $params["modifiedAt"] = date("Y-m-d H:i:s");
-        $params["modifiedBy"] = $params["userLogged"]["user"]->id??0;
+        $id = $args['id'];
+        $params = $request->getParsedBody();
         unset($params["userLogged"]);
-        $this->validateProduit($params['produits']);
-        if (!is_numeric($params['statut'])) throw new PharmacieHasProduitException("Le statut est un entier.");
+        $this->required($params,"status",new PharmacieHasProduitException("status est obligatoire"));
+        if(isset($params["status"])){
+            if(is_null($params["status"])) throw new PharmacieHasProduitException("status ne peut être vide.");
+            if(!is_numeric($params["status"])) throw new PharmacieHasProduitException("status doit être un nombre entier.");
+            if($params["status"]!=0 && $params["status"]!=1) throw new PharmacieHasProduitException("status doit être 0:inactif ou 1:actif.");
+        }
+        $params["modifiedBy"] = $params["userLogged"]["user"]->id??null;
+        $params["modifiedAt"] = date("Y-m-d H:i:s");
         $repository = new PharmacieHasProduitRepository;
-        $pharmacie = $repository->ChangerStatutPharmacieHasProduit( $params['produits'], $params['statut'], $params["modifiedBy"],$params["modifiedAt"], $critere);
-        return $this->jsonResponseWithData($response, "success", "Statut Produits changés avec succès", $pharmacie, 200);
+        $produit = $repository->ChangerStatutPharmacieHasProduit( $id, $params['status'], $params["modifiedBy"],$params["modifiedAt"]);
+        $message = "Produit ";
+        $message .= ($params["status"]==1) ? "activé ":"désactivé";
+        $message .= " avec succès !";
+        return $this->jsonResponseWithData($response, "success", $message , $produit, 200);
     }
     public function delete(Request $request, Response $response, array $args): Response
     {

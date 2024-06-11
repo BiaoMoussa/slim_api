@@ -29,7 +29,7 @@ class PharmacieHasProduitRepository  extends BaseRepository
 
     public function update($id, $params, $critere = 'true')
     {
-        
+
         try {
             $produit =  $this->getOne($id, $critere);
 
@@ -63,14 +63,14 @@ class PharmacieHasProduitRepository  extends BaseRepository
 
     public function getAll($critere = 'true', $page = 1, $perPage = 10)
     {
-        $QUERY = "SELECT php.*, pr.*, ph.nom_pharmacie FROM pharmacie_has_produits php ,produits pr, pharmacies ph 
+        $QUERY = "SELECT php.*, pr.*, ph.nom_pharmacie, php.statut as statut_produit FROM pharmacie_has_produits php ,produits pr, pharmacies ph 
                      WHERE php.id_produit=pr.id_produit AND php.id_pharmacie=ph.id_pharmacie AND $critere";
         return  $this->getResultsWithPagination($QUERY, $page, $perPage);
     }
 
     public function getOne($id_pharmacie_has_produit, $critere = 'true')
     {
-        $QUERY = "SELECT * FROM pharmacie_has_produits php ,produits pr, pharmacies ph 
+        $QUERY = "SELECT php.*, pr.*, ph.nom_pharmacie, php.statut as statut_produit FROM pharmacie_has_produits php ,produits pr, pharmacies ph 
                      WHERE php.id_produit=pr.id_produit AND php.id_pharmacie=ph.id_pharmacie AND php.id_pharmacie_has_produit=$id_pharmacie_has_produit AND $critere";
         $resultat = $this->database->query($QUERY)->fetch(PDO::FETCH_ASSOC);
         if (empty($resultat)) {
@@ -95,65 +95,53 @@ class PharmacieHasProduitRepository  extends BaseRepository
 
     public function addPharmacieHasProduit($id_pharmacie, $produits = [], $created_by, $created_at)
     {
-      
-      
-                 
-                
+
+
+
+
         try {
-             $this->database->beginTransaction();
+            $this->database->beginTransaction();
             $this->pharmacieExists($id_pharmacie);
             if (!empty($produits)) {
 
                 // $i=0;
                 foreach ($produits as  $value) {
-                    $data= [];
+                    $data = [];
                     $this->produitExists($value['id_produit']);
                     $this->relationExists($value['id_produit'], $id_pharmacie);
-                    $data['id_produit']=$value['id_produit'];
-                    $data['prix']=$value['prix'];
-                    $data['id_pharmacie']=$id_pharmacie;
-                    $data['created_at']=$created_at;
-                    $data['created_by']=$created_by;
+                    $data['id_produit'] = $value['id_produit'];
+                    $data['prix'] = $value['prix'];
+                    $data['id_pharmacie'] = $id_pharmacie;
+                    $data['created_at'] = $created_at;
+                    $data['created_by'] = $created_by;
                     $QUERY = "INSERT INTO pharmacie_has_produits (id_produit, id_pharmacie, prix, created_by, created_at) VALUES( :id_produit, :id_pharmacie, :prix, :created_by, :created_at)";
-                 
+
                     $this->database->prepare($QUERY)->execute($data);
                 }
-
-                
-                  
-             
             }
 
             $this->database->commit();
             return $this->getPharmacieHasProduits($id_pharmacie);
-       
         } catch (PDOException $exception) {
             $this->database->rollBack();
             throw $exception;
         }
     }
 
-    public function ChangerStatutPharmacieHasProduit($pharmacie_has_produits = [], $status, $modified_by, $modified_at, $critere = "true")
+    public function ChangerStatutPharmacieHasProduit($pharmacie_has_produit, $status, $modified_by, $modified_at, $critere = "true")
     {
         try {
             $this->database->beginTransaction();
-         
-            if (!empty($pharmacie_has_produits)) {
-                foreach ($pharmacie_has_produits as $pharmacie_has_produit) {
-                    $this->getOne($pharmacie_has_produit, $critere);
-                    $data= [];
-                    $data['modified_at']=$modified_at;
-                    $data['modified_by']=$modified_by;
-                    $data['statut']=$status;
-              
-                    $QUERY = "UPDATE  pharmacie_has_produits php SET statut=:statut, modified_by=:modified_by, modified_at=:modified_at WHERE id_pharmacie_has_produit=$pharmacie_has_produit  AND $critere";
-                    $this->database->prepare($QUERY)->execute($data);
-                 
-               
-                }
-            }
+
+            $data = [];
+            $data['modified_at'] = $modified_at;
+            $data['modified_by'] = $modified_by;
+            $data['statut'] = $status;
+
+            $QUERY = "UPDATE  pharmacie_has_produits php SET statut=:statut, modified_by=:modified_by, modified_at=:modified_at WHERE id_pharmacie_has_produit=$pharmacie_has_produit  AND $critere";
+            $this->database->prepare($QUERY)->execute($data);
             $this->database->commit();
-            return true;
+            return $this->getOne($pharmacie_has_produit);;
         } catch (PharmacieHasProduitException $exception) {
             $this->database->rollBack();
             throw $exception;
