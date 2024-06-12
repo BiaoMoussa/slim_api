@@ -151,6 +151,7 @@ $app->group('/v1/admin', function () use ($app): void {
         $app->post('', "App\Admin\Controller\PharmacieController:add");
         $app->get('/{id}', "App\Admin\Controller\PharmacieController:getOne");
         $app->put('/{id}', "App\Admin\Controller\PharmacieController:update");
+        $app->put('/SynProduit/{id}', "App\Admin\Controller\PharmacieController:synProduit");
         $app->post('/setStatus/{id}', "App\Admin\Controller\PharmacieController:setStatus");
         $app->delete('/{id}', "App\Admin\Controller\PharmacieController:delete");
     })->add(new Auth);
