@@ -29,8 +29,8 @@ class PharmacieRepository  extends BaseRepository
             }
             $this->database->beginTransaction();
 
-            $QUERY = "INSERT INTO pharmacies(nom_pharmacie,telephone,adresse,coordonnees,observation,created_by,modified_by)
-                VALUES (:nom,:telephone,:adresse,:coordonnees,:observation,:createdBy,:updatedBy)";
+            $QUERY = "INSERT INTO pharmacies(nom_pharmacie,telephone,adresse,coordonnees, id_commune,observation,created_by,modified_by)
+                VALUES (:nom,:telephone,:adresse,:coordonnees,:commune,:observation,:createdBy,:updatedBy)";
             $this->database->prepare($QUERY)->execute($params);
 
             $idPharmacie = $this->database->lastInsertId();
@@ -61,6 +61,7 @@ class PharmacieRepository  extends BaseRepository
         $oldNom = strtolower($pharmacie["nom"]);
         $params["nom"] = $params["nom"] ?? $pharmacie["nom"];
         $params["telephone"] = $params["telephone"] ?? $pharmacie["telephone"];
+        $params["commune"] = $params["commune"] ?? $pharmacie["commune"];
         $params["adresse"] = $params["adresse"] ?? $pharmacie["adresse"];
         $params["coordonnees"] = $params["coordonnees"] ?? $pharmacie["coordonnees"];
         $params["observation"] = $params["observation"] ?? $pharmacie["observation"];
@@ -79,11 +80,15 @@ class PharmacieRepository  extends BaseRepository
                     throw new PharmacieException("Cette pharmacie existe déjà.");
                 }
             }
+            $id_commune = $params["commune"];;
+            if ($this->database->query("SELECT id_commune FROM communes WHERE id_commune='$id_commune'")->rowCount() == 0)
+                throw new PharmacieException("Commune introuvable",404);
             $QUERY = "UPDATE pharmacies SET
                         nom_pharmacie=:nom,
                         telephone=:telephone,
                         adresse=:adresse,
                         coordonnees=:coordonnees,
+                        id_commune =:commune,
                         observation=:observation,
                         modified_at=:updatedAt,
                         modified_by=:updatedBy
@@ -128,15 +133,15 @@ class PharmacieRepository  extends BaseRepository
 
     public function getAll($critere = 'true', $page = 1, $perPage = 10)
     {
-        $QUERY = "SELECT id_pharmacie as id, nom_pharmacie as nom, telephone, adresse, coordonnees, statut, observation, garde
-        FROM pharmacies WHERE 1 AND $critere";
+        $QUERY = "SELECT id_pharmacie as id, nom_pharmacie as nom, telephone, adresse, coordonnees, statut, observation, garde, libelle_commune
+        FROM pharmacies, communes WHERE pharmacies.id_commune=communes.id_commune AND $critere";
         return  $this->getResultsWithPagination($QUERY, $page, $perPage);
     }
 
     public function getOne($id, $critere = 'true')
     {
-        $QUERY = "SELECT id_pharmacie as id, nom_pharmacie as nom, telephone, adresse, coordonnees, statut, observation, garde
-        FROM pharmacies WHERE id_pharmacie='$id' AND $critere";
+        $QUERY = "SELECT id_pharmacie as id, nom_pharmacie as nom, telephone, adresse, coordonnees, statut, observation, garde, libelle_commune
+        FROM pharmacies, communes WHERE pharmacies.id_commune=communes.id_commune AND id_pharmacie='$id' AND $critere";
         $pharmacie = $this->database->query($QUERY)->fetch(PDO::FETCH_ASSOC);
         if (empty($pharmacie)) {
             throw new PharmacieException("Pharmacie non trouvée.", 404);

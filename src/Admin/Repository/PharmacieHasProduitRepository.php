@@ -85,19 +85,19 @@ class PharmacieHasProduitRepository  extends BaseRepository
         return  $this->database->query($QUERY)->rowCount() > 0;
     }
 
-    public function getPharmacieHasProduits($idPharmacie)
+    public function getPharmacieHasProduits($idPharmacie, $critere = "true",$page = 1, $perPage = 10)
     {
         $this->pharmacieExists($idPharmacie);
-        $QUERY = "SELECT * FROM pharmacie_has_produits php ,produits pr, pharmacies ph 
-                 WHERE php.id_produit=pr.id_produit AND php.id_pharmacie=ph.id_pharmacie AND ph.id_pharmacie=$idPharmacie";
-        return  $this->database->query($QUERY)->fetchAll(PDO::FETCH_ASSOC);
+        $QUERY = "SELECT pr.*,php.*,cat.* FROM pharmacie_has_produits php ,produits pr, pharmacies ph , categories cat
+                 WHERE php.id_produit=pr.id_produit 
+                 AND php.id_pharmacie=ph.id_pharmacie 
+                 AND pr.id_categorie = cat.id_categorie
+                 AND ph.id_pharmacie=$idPharmacie AND $critere";
+       return  $this->getResultsWithPagination($QUERY, $page, $perPage);
     }
 
     public function addPharmacieHasProduit($id_pharmacie, $produits = [], $created_by, $created_at)
     {
-
-
-
 
         try {
             $this->database->beginTransaction();
@@ -108,7 +108,7 @@ class PharmacieHasProduitRepository  extends BaseRepository
                 foreach ($produits as  $value) {
                     $data = [];
                     $this->produitExists($value['id_produit']);
-                    $this->relationExists($value['id_produit'], $id_pharmacie);
+                    if($this->relationExists($value['id_produit'], $id_pharmacie)) continue;
                     $data['id_produit'] = $value['id_produit'];
                     $data['prix'] = $value['prix'];
                     $data['id_pharmacie'] = $id_pharmacie;
@@ -153,12 +153,9 @@ class PharmacieHasProduitRepository  extends BaseRepository
 
     public function relationExists($idProduit, $pharmacie)
     {
-        $control_existence_liaison = $this->database
+        return $this->database
             ->query("SELECT * FROM pharmacie_has_produits WHERE id_pharmacie='$pharmacie' AND id_produit='$idProduit'")
             ->rowCount() > 0;
-        if ($control_existence_liaison) {
-            throw new PharmacieHasProduitException("Le produit $idProduit est déjà dans la liste des produit de la pharmacie $pharmacie.");
-        }
     }
 
     private function produitExists($produit)

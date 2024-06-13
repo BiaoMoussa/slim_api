@@ -27,8 +27,10 @@ $app->get('/error', "App\Controller\UserController:handleError");
 
 
 
-
-
+/**
+ * Recherche de produits
+ */
+$app->post('/search', 'App\Controller\SearchController:make'); 
 
 
 /**
@@ -68,11 +70,28 @@ $app->group('/v1', function () use ($app): void {
         $app->delete('/{id}', "App\Controller\ProfilController:delete");
     })->add(new Auth);
 
+    //Ce groupe concerne les paramètres de l'application du coté de l'administrateur de pharmacie
     $app->group('/parametres', function () use ($app): void {
         $app->get('/{id}', "App\Admin\Controller\PharmacieController:getOne");
         $app->put('/{id}', "App\Admin\Controller\PharmacieController:update");
+        
        
     })->add(new Auth);
+
+    $app->group("/stocks", function () use ($app): void {
+        // $app->get('', "App\Admin\Controller\PharmacieHasProduitController:getAll");
+        // $app->post('/{id}', "App\Admin\Controller\PharmacieHasProduitController:add");
+        $app->put('/setStatus/{id}', "App\Admin\Controller\PharmacieHasProduitController:setStatus");
+        //$app->get('/{id}', "App\Admin\Controller\PharmacieHasProduitController:getOne");
+        $app->get('/{id}', "App\Admin\Controller\PharmacieHasProduitController:getPharamacieProduits");
+        // $app->put('/{id}', "App\Admin\Controller\PharmacieHasProduitController:update");
+        // $app->delete('/{id}', "App\Admin\Controller\PharmacieHasProduitController:delete");
+    })->add(new Auth);
+
+    // Consulter les catégories de produits
+    $app->group('/categories', function () use ($app): void {
+        $app->get('', "App\Admin\Controller\CategorieController:getAll");
+    });
 });
 
 
@@ -85,6 +104,10 @@ $app->group('/v1', function () use ($app): void {
  */
 
 $app->group('/v1/admin', function () use ($app): void {
+
+    // Les statistiques
+    $app->get('/stats', "App\Admin\Controller\StatsController:getAll");
+
     $app->group('/actions', function () use ($app): void {
         $app->get('', "App\Admin\Controller\ActionController:getAll");
         $app->post('', "App\Admin\Controller\ActionController:add");
@@ -138,7 +161,7 @@ $app->group('/v1/admin', function () use ($app): void {
             $app->post('/{id}', "App\Admin\Controller\PharmacieHasProduitController:add");
             $app->put('/setStatus/{id}', "App\Admin\Controller\PharmacieHasProduitController:setStatus");
             $app->get('/{id}', "App\Admin\Controller\PharmacieHasProduitController:getOne");
-            $app->get('/find_one_pharmacie/{id}', "App\Admin\Controller\PharmacieHasProduitController:getPharamacieProduits");
+            $app->get('/pharmacie/{id}', "App\Admin\Controller\PharmacieHasProduitController:getPharamacieProduits");
             $app->put('/{id}', "App\Admin\Controller\PharmacieHasProduitController:update");
             $app->delete('/{id}', "App\Admin\Controller\PharmacieHasProduitController:delete");
         });

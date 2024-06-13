@@ -154,7 +154,7 @@ class UserRepository extends BaseRepository
             ->fetchAll(PDO::FETCH_ASSOC);
         $menu = $this->database->query("SELECT id_action as id, 
                                     url_action as url, icon, libelle_action as label, description_action as description 
-                                FROM actions WHERE (is_menu=1  AND $subCritera)")
+                                FROM actions WHERE (is_menu=1  AND $subCritera) ORDER BY ordre")
             ->fetchAll(PDO::FETCH_ASSOC);
 
         $dashboardMenu  = $this->database->query("SELECT id_action as id, 

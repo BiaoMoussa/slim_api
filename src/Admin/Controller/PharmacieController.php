@@ -56,6 +56,11 @@ class PharmacieController extends BaseController
             $critere .= " AND LOWER(adresse) LIKE '%$adresse%'";
         }
 
+        if (isset($queryParams["comumune"]) && !empty($queryParams["comumune"])) {
+            $comumune = (int)$queryParams["comumune"];
+            $critere .= " AND pharmacies.id_commune = '$comumune'";
+        }
+
         if (isset($queryParams["telephone"]) && !empty($queryParams["telephone"])) {
             $telephone = strtolower($queryParams["telephone"]);
             $critere .= " AND LOWER(telephone) LIKE '%$telephone%'";
@@ -109,11 +114,11 @@ class PharmacieController extends BaseController
         $params = $request->getParsedBody();
         $params["updatedBy"] = $params["userLogged"]["user"]->id ?? null;
         $params["createdBy"] = $params["userLogged"]["user"]->id ?? null;
-        $defaultPassword = empty($params["password"])? "(password:Default2024)": "";
+        $defaultPassword = empty($params["password"]) ? "(password:Default2024)" : "";
         unset($params["userLogged"]);
         $this->validateAdmin($params);
         $admin = (new PharmacieRepository)->addAdmin($id, $params);
-        return $this->jsonResponseWithData($response, "success", "Admin créé avec succès ".$defaultPassword, $admin, 200);
+        return $this->jsonResponseWithData($response, "success", "Admin créé avec succès " . $defaultPassword, $admin, 200);
     }
 
     public function updateAdmin(Request $request, Response $response, array $args): Response
@@ -169,6 +174,7 @@ class PharmacieController extends BaseController
         $this->required($params, "nom", new PharmacieException("nom est obligatoire."));
         $this->required($params, "telephone", new PharmacieException("telephone est obligatoire."));
         $this->required($params, "adresse", new PharmacieException("adresse est obligatoire."));
+        $this->required($params, "commune", new PharmacieException("commune est obligatoire."));
         //$this->required($params, "coordonnees", new PharmacieException("coordonnees est obligatoire."));
         $this->validateUpdate($params);
     }
@@ -185,15 +191,17 @@ class PharmacieController extends BaseController
             if (strlen($params["telephone"]) != 8) throw new PharmacieException("telephone doit avoir  8 caractères.");
             if (!is_numeric($params["telephone"])) throw new PharmacieException("telephone au mauvais format.");
         }
-        
-        if(isset($params["coordonnees"]) && !empty($params["coordonnees"])){
+
+        if (isset($params["comnune"])) {
+            if (!is_numeric($params["comnune"])) throw new PharmacieException("comnune doit avoir au moins 3 caractères.");
+        }
+        if (isset($params["coordonnees"]) && !empty($params["coordonnees"])) {
             $this->isGeolocationCoordinatesValid($params["coordonnees"], new PharmacieException("Coordonnées géographiques incorrectes"));
         }
 
         if (isset($params["adresse"])) {
             if (strlen($params["adresse"]) < 2) throw new PharmacieException("adresse doit avoir au moins 2 caractères.");
         }
-        
     }
 
     private function  validateAdmin($params)

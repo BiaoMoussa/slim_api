@@ -99,6 +99,12 @@ abstract class BaseController
         return (string) $email;
     }
    
-    
+    protected function isGeolocationCoordinatesValid(string $geolocation, Exception $exception)
+    {
+        if (!preg_match('/^([+-]?([1-8]?\d(\.\d+)?|90(\.0+)?)),\s*([+-]?(180(\.0+)?|((1[0-7]\d)|([1-9]?\d))(\.\d+)?))$/', $geolocation)) {
+            throw $exception;
+        }
+        return $geolocation;
+    }
 
 }
