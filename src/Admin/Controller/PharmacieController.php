@@ -38,6 +38,18 @@ class PharmacieController extends BaseController
         return $this->jsonResponseWithData($response, "success", "Pharmacie modifiée avec succès", $pharmacie, 200);
     }
 
+    public function synProduit(Request $request, Response $response, array $args): Response
+    {
+        $id = $args["id"];
+        $params  = (array)$request->getParsedBody();
+        $params["created_by"] = $params["userLogged"]["user"]->id ?? null;
+        $params["created_at"] = date("Y-m-d H:i:s");
+        unset($params["userLogged"]);
+        $repository = new PharmacieRepository;
+        $total_ajouter = $repository->syncProduit($id, $params);
+        return $this->jsonResponseWithData($response, "success", "$total_ajouter produits Pharmacie ont été ajoutés avec succès", $total_ajouter, 200);
+    }
+
     public function getAll(Request $request, Response $response): Response
     {
         $queryParams = $request->getQueryParams();

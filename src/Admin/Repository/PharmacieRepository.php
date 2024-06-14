@@ -101,6 +101,30 @@ class PharmacieRepository  extends BaseRepository
         }
     }
 
+    public function syncProduit($id, $params)
+    {
+
+        $pharmacie = $this->getOne($id);
+
+        try {
+            $this->database->beginTransaction();
+            // Association des produits à la pharmacie créée
+            $created_by = $params["created_by"];
+            $created_at = $params["created_at"];
+            $QUERY = "INSERT INTO pharmacie_has_produits (id_pharmacie,id_produit,created_by,created_at)
+            SELECT :id_pharmacie, id_produit,:created_by,:created_at FROM produits WHERE id_produit NOT IN (SELECT id_produit FROM pharmacie_has_produits WHERE id_pharmacie = $id)";
+            $mapping_params = ["id_pharmacie" => $id, "created_by" => $created_by, "created_at" => $created_at];
+            $stmt=$this->database->prepare($QUERY);
+            $stmt->execute($mapping_params);
+            $rowCount = $stmt->rowCount();
+            $this->database->commit();
+            return $rowCount;
+        } catch (PDOException $exception) {
+            $this->database->rollBack();
+            throw $exception;
+        }
+    }
+
 
     public function setStatus($id, $status)
     {
