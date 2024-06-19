@@ -2,8 +2,9 @@
 
 declare(strict_types=1);
 
-use App\Controller\PharmacieController;
+
 use App\Middleware\Auth;
+use App\Middleware\SearchSigninMiddleware;
 
 /** @var \Slim\App $app */
 /**
@@ -28,9 +29,59 @@ $app->get('/error', "App\Controller\UserController:handleError");
 
 
 /**
+ * Les routes des fonctionnalités usuelles (comptes)
+ */
+
+/**
  * Recherche de produits
  */
-$app->post('/search', 'App\Controller\SearchController:make'); 
+$app->post('/search', 'App\Controller\SearchController:make')->add(new SearchSigninMiddleware); 
+
+
+/**
+ * Création de compte
+ */
+$app->post('/sign-up', 'App\Controller\SearchController:signup'); 
+
+
+/**
+ * Sign-in
+ */
+$app->post('/sign-in', 'App\Controller\SearchController:signin');  
+
+
+/**
+ * Voir le profil
+ */
+$app->get('/profil', 'App\Controller\SearchController:profil')->add(new SearchSigninMiddleware);  
+
+/**
+ * Voir le profil
+ */
+$app->put('/update', 'App\Controller\SearchController:updateAccount')->add(new SearchSigninMiddleware);  
+
+/**
+ * Changement de mot de passe
+ */
+$app->put('/changePassword', 'App\Controller\SearchController:changePassword')->add(new SearchSigninMiddleware);
+
+
+
+/**
+ * Historique des recherches
+ */
+$app->get('/histories', 'App\Controller\SearchController:histories')->add(new SearchSigninMiddleware);
+
+
+
+
+
+
+
+
+
+
+
 
 
 /**

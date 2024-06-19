@@ -107,4 +107,11 @@ abstract class BaseController
         return $geolocation;
     }
 
+    protected function validatePhoneNumber(string $phone, Exception $exception)
+    {
+        if (!preg_match('/^\+?[1-9]\d{1,14}$/', $phone)) {
+            throw $exception;
+        }
+        return $phone;
+    }
 }

@@ -81,14 +81,14 @@ class StatsRepository  extends BaseRepository
         //5.Les 20 premiers produits les plus recherchés avec ou sans resulats
         $produits_plus_recherches = $this->database->query(
             "SELECT produits.designation,
-            COUNT(recherches.id_produit) as rechereches,
+            COUNT(recherches.id_produit) as recherches,
             COUNT(CASE WHEN resultats_recherche.nombre_resultat > 0 THEN 1 END) as avec_resulat,
             COUNT(CASE WHEN resultats_recherche.nombre_resultat = 0 THEN 1 END) as sans_resulat
             FROM produits, recherches, resultats_recherche
             WHERE produits.id_produit = recherches.id_produit
             AND resultats_recherche.id_recherche = recherches.id_recherche
             GROUP BY produits.designation
-            ORDER BY rechereches DESC
+            ORDER BY recherches DESC
             LIMIT 0,20
             "
         )->fetchAll(PDO::FETCH_ASSOC);
@@ -156,15 +156,15 @@ class StatsRepository  extends BaseRepository
                 "total" => $nb_search,
                 "with_result" => $search_with_result,
                 "without_result" => $search_without_result,
-                "with_ratio" => round($search_with_result / $nb_search) * 100,
-                "without_ratio" => round($search_without_result / $nb_search) * 100,
+                "with_ratio" => round(($search_with_result / $nb_search) * 100,3),
+                "without_ratio" => round(($search_without_result / $nb_search) * 100,3),
             ],
             "produits" => [
                 "total" => $nb_produit,
                 "disponible" => $nb_produit_disponible,
                 "indisponible" => $nb_produit_indisponible,
-                "disponible_ratio" => round($nb_produit_disponible / $nb_produit) * 100,
-                "indisponible_ratio" => round($nb_produit_indisponible / $nb_produit) * 100,
+                "disponible_ratio" => round(($nb_produit_disponible / $nb_produit) * 100,3),
+                "indisponible_ratio" => round(($nb_produit_indisponible / $nb_produit) * 100,3),
                 "produit_per_categorie" => $nb_produit_par_categorie,
                 "produit_plus_recherches" => $produits_plus_recherches
             ],

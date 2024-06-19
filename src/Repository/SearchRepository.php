@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Repository;
 
-
 use App\Exception\SearchException;
 use Exception;
 use PDO;
@@ -14,12 +13,11 @@ use PDOException;
 class SearchRepository extends BaseRepository
 {
 
+    private function search(array $params,$page = 1, $perPage = 10){
 
-
-    public function insert($params = [],  $page = 1, $perPage = 10)
-    {
         $produit = (int)$params["produit"];
         $params["position"] = $params["position"] ?? null;
+
         if (!isset($params["position"])) {
             $QUERY_SEARCH = "SELECT ph.*, com.libelle_commune
             FROM pharmacie_has_produits  php,
@@ -49,17 +47,40 @@ class SearchRepository extends BaseRepository
               AND pr.id_produit='$produit' 
               ORDER BY distance_km ASC
               ";
-            
         }
 
-        $results =  $this->database->query($QUERY_SEARCH)->fetchAll(PDO::FETCH_OBJ);
+        return  $this->getResultsWithPagination($QUERY_SEARCH, $page, $perPage);
+    }
+
+    public function insert($params = [],  $page = 1, $perPage = 10)
+    {
+        $produit = (int)$params["produit"];
+        $params["position"] = $params["position"] ?? null;
+
+        $connectedAccount = (array)$params["connectedAccount"];
+
+        $numero_telephone = $connectedAccount["numero_telephone"];
+
+        $solde_recherche = $this->database->query("SELECT solde_recherche FROM comptes WHERE numero_telephone='$numero_telephone'")->fetchColumn();
+
+
+
+        // vérification du solde du compte
+        if (!$solde_recherche || $solde_recherche <= 0) {
+            throw new SearchException("Votre solde de recherche est insuffisant", 400);
+        }
+
+
+
+        $results = $this->search($params,$page,$perPage)["content"];
+       
         $nombre_resultat = count($results);
 
         $searchCount = $this->database->query("SELECT id_recherche FROM recherches")->rowCount();
 
         $code_recherche = "SEARCH-" . $searchCount + 1;
-        $QUERY_INSERT_SEARCH = "INSERT INTO recherches (id_produit,position_recherche, code_recherche)VALUES (:id_produit,:position, :code)";
-        $insert_sarch_params = ["id_produit" => $produit, "position" => $params["position"], "code" => $code_recherche];
+        $QUERY_INSERT_SEARCH = "INSERT INTO recherches (id_produit,position_recherche, code_recherche,numero_compte)VALUES (:id_produit,:position, :code,:numero_compte)";
+        $insert_sarch_params = ["id_produit" => $produit, "position" => $params["position"], "code" => $code_recherche, "numero_compte" => $numero_telephone];
 
         $QUERY_INSERT_RESULT = "INSERT INTO resultats_recherche (id_recherche,nombre_resultat) VALUES (:id_recherche,:nombre_resultat)";
         $insert_result_params = ["nombre_resultat" => $nombre_resultat];
@@ -67,6 +88,11 @@ class SearchRepository extends BaseRepository
         $QUERY_INSERT_LIGNE_RESULT = "INSERT INTO lignes_resultat_recherche(id_resultat, id_pharmacie) VALUES (:id_resultat,:id_pharmacie)";
         $insert_lignes_resultat_params = [];
 
+        $QUERY_UPDATE_SOLDE_RECHERCHE = "UPDATE 
+        comptes SET solde_recherche=:solde_recherche 
+        WHERE numero_telephone = :numero_telephone";
+
+        $faturation_params = ["numero_telephone" => $numero_telephone];
         // Si la recherche existe on fait une simple consultation
         if ($this->exists("LOWER(code_recherche) = '$code_recherche'")) {
             return  $this->getResultsWithPagination($QUERY_INSERT_SEARCH, $page, $perPage);
@@ -96,21 +122,111 @@ class SearchRepository extends BaseRepository
 
             // Insertion des lignes de resultat
             if ($nombre_resultat > 0) {
+
+                $faturation_params['solde_recherche'] =  $solde_recherche - 1;
+                // Facturation de la recherche
+                $update_ok = $this->database->prepare($QUERY_UPDATE_SOLDE_RECHERCHE)->execute($faturation_params);
+
                 foreach ($results as $key => $result) {
                     $insert_lignes_resultat_params["id_pharmacie"] = $result->id_pharmacie;
                     $insert_ligne_result_ok = $this->database->prepare($QUERY_INSERT_LIGNE_RESULT)->execute($insert_lignes_resultat_params);
+
                     if (!$insert_ligne_result_ok)
                         $this->database->rollBack();
                 }
             }
             $this->database->commit();
-            return  $this->getResultsWithPagination($QUERY_SEARCH, $page, $perPage);
+            return  $this->search($params,$page,$perPage);
         } catch (Exception $exception) {
             $this->database->rollBack();
             throw $exception;
         }
     }
 
+
+
+    function siginin($params = [])
+    {
+
+        $numero = $params["numero"];
+        $password = $params["password"];
+        $query = "SELECT * FROM comptes WHERE numero_telephone=:numero";
+        $statement = $this->database->prepare($query);
+        $statement->bindParam('numero', $numero);
+        $statement->execute();
+        $compte = $statement->fetch(PDO::FETCH_ASSOC);
+
+        if (empty($compte)) {
+            throw new SearchException(
+                'Login echoué: login ou password incorrect.',
+                400
+            );
+        }
+
+        if (!password_verify($password, $compte["password"])) {
+            throw new SearchException(
+                'Login echoué: login ou password incorrect.',
+                400
+            );
+        }
+        unset($compte['password']);
+
+        if ($compte["statut"] == 0) {
+            throw new SearchException("Vous avez été désactivé.", 400);
+        }
+
+        return $compte;
+    }
+
+    public function signup($params = [])
+    {
+        // Ajustement des paramètres facltatifs
+        $params["nom"] = $params["nom"] ?? null;
+        $params["prenom"] = $params["prenom"] ?? null;
+        $params["pays"] = $params["pays"] ?? "NE";
+        $params["password"] = password_hash($params["password"], PASSWORD_BCRYPT, ['cost' => 12]);
+        $numero = $params["numero"];
+        try {
+            if ($this->accountExists("numero_telephone='$numero'")) {
+                throw new SearchException("Ce compte est déjà créé.");
+            }
+
+            $QUERY = "INSERT INTO comptes(numero_telephone,nom,prenom,password,pays)
+                VALUES (:numero,:nom,:prenom,:password,:pays)";
+
+            $this->database->prepare($QUERY)->execute($params);
+            return $this->getOneAccount($this->database->lastInsertId());
+        } catch (PDOException $exception) {
+            throw $exception;
+        }
+    }
+
+    public function updateAccount($params = [])
+    {
+        // Ajoustement des paramètres facltatifs
+        $nom = $params["nom"] ?? null;
+        $prenom = $params["prenom"] ?? null;
+        $pays = $params["pays"] ?? "NE";
+        $numero = $params["numero"];
+        $query_params = ["nom" => $nom, "prenom" => $prenom, "pays" => $pays, "numero" => $numero];
+        try {
+            $account = $this->accountExists("numero_telephone='$numero'");
+
+            if (!$account) {
+                throw new SearchException("Ce compte n'existe pas");
+            }
+            $QUERY = "UPDATE comptes
+             SET nom=:nom,
+              prenom=:prenom, 
+              pays=:pays
+               WHERE numero_telephone=:numero";
+
+            $this->database->prepare($QUERY)->execute($query_params);
+            return $this->getOneAccount($account->numero_telephone);
+        } catch (PDOException $exception) {
+            throw $exception;
+        }
+    }
     public function update($id, $params, $critere = 'true')
     {
     }
@@ -159,15 +275,61 @@ class SearchRepository extends BaseRepository
         return array_merge($user, ["actions" => $actions, "menu" => $menu]);
     }
 
+    public function getOneAccount($id, $critere = 'true')
+    {
+        $QUERY = "SELECT * FROM comptes WHERE id_compte ='$id' OR numero_telephone ='$id' AND $critere";
+        $compte = $this->database->query($QUERY)->fetch(PDO::FETCH_ASSOC);
+        if (empty($compte)) {
+            throw new SearchException("Compte introuvable.", 404);
+        }
+        unset($compte["password"]);
+        return $compte;
+    }
+
+    public function getSearchHistories(string $numero)
+    {
+        $QUERY = "SELECT * FROM recherches WHERE numero_compte = '$numero'";
+
+        $recherches = $this->database->query($QUERY)->fetchAll(PDO::FETCH_ASSOC);
+
+        if (!empty($recherches)) {
+            foreach ($recherches as $index => $recherche) {
+               
+                $id_recherche = $recherche["id_recherche"];
+
+                $QUERY_GET_SEARCH_RESULTS = "SELECT * FROM  resultats_recherche WHERE id_recherche='$id_recherche'";
+
+                $resulat = $this->database->query($QUERY_GET_SEARCH_RESULTS)->fetch(PDO::FETCH_ASSOC);
+                
+                $recherches[$index]["resultat"]["nombre"] = $resulat["nombre_resultat"];
+                
+                if ($resulat["nombre_resultat"] > 0) {
+
+                    $id_resultat = $resulat["id_resultat"];
+
+                    $QUERY_GET_LINE_SEARCH_RESULTS =
+                        "SELECT pharmacies.* 
+                        FROM  lignes_resultat_recherche, pharmacies
+                         WHERE lignes_resultat_recherche.id_pharmacie=pharmacies.id_pharmacie 
+                         AND  id_resultat='$id_resultat' ";
+                    $lignes_resultats = $this->database->query($QUERY_GET_LINE_SEARCH_RESULTS)->fetchAll(PDO::FETCH_ASSOC);
+
+                    $recherches[$index]["resultat"]["lignes"] = $lignes_resultats;
+                }
+            }
+        }
+        return array_merge(["nombre_recherches" => count($recherches),"recherches"=>$recherches]); ;
+    }
+
     public function changePassowrd($id, $oldPassword, $newPassowrd)
     {
         try {
-            $this->getOne($id);
-            $user = $this->database->query("SELECT password FROM users WHERE id_user='$id'")->fetch(PDO::FETCH_ASSOC);
-            if (!password_verify($oldPassword, $user["password"])) {
+            $this->getOneAccount($id);
+            $compte = $this->database->query("SELECT password FROM comptes WHERE numero_telephone='$id'")->fetch(PDO::FETCH_ASSOC);
+            if (!password_verify($oldPassword, $compte["password"])) {
                 throw new SearchException("Mot de passe incorrect", 403);
             }
-            $QUERY = "UPDATE users SET password=:password WHERE id_user=:id";
+            $QUERY = "UPDATE comptes SET password=:password WHERE numero_telephone=:id";
             $newPassowrd = password_hash($newPassowrd, PASSWORD_BCRYPT);
             $this->database->prepare($QUERY)->execute(["password" => "$newPassowrd", "id" => $id]);
             return true;
@@ -192,6 +354,12 @@ class SearchRepository extends BaseRepository
     public function exists($critere = 'true'): bool
     {
         return $this->database->query("SELECT id_recherche FROM recherches WHERE $critere")->rowCount() > 0;
+    }
+
+    public function accountExists($critere = 'true'): bool|object
+    {
+
+        return $this->database->query("SELECT id_compte, numero_telephone FROM comptes WHERE $critere")->fetchObject();
     }
 
     private function profilExists($id, $crietre = "true"): bool
