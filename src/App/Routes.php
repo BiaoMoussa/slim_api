@@ -35,7 +35,7 @@ $app->get('/error', "App\Controller\UserController:handleError");
 /**
  * Recherche de produits
  */
-$app->post('/search', 'App\Controller\SearchController:make')->add(new SearchSigninMiddleware);
+$app->post('/search', 'App\Controller\SearchController:make'); 
 
 
 /**
@@ -73,7 +73,16 @@ $app->put('/changePassword', 'App\Controller\SearchController:changePassword')->
 $app->get('/histories', 'App\Controller\SearchController:histories')->add(new SearchSigninMiddleware);
 
 
+/**
+ * Liste des produits
+ */
+$app->get('/produits', "App\Admin\Controller\ProduitController:getAll");
 
+
+/**
+ * Les communes de Niamey
+ */
+$app->get('/communes', "App\Admin\Controller\PharmacieController:getCommunes");
 
 
 
@@ -159,6 +168,9 @@ $app->group('/v1/admin', function () use ($app): void {
 
     // Les statistiques
     $app->get('/stats', "App\Admin\Controller\StatsController:getAll");
+
+    // Les communes 
+    $app->get('/communes', "App\Admin\Controller\PharmacieController:getCommunes");
 
     $app->group('/actions', function () use ($app): void {
         $app->get('', "App\Admin\Controller\ActionController:getAll");

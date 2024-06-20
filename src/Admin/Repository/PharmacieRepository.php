@@ -80,9 +80,9 @@ class PharmacieRepository  extends BaseRepository
                     throw new PharmacieException("Cette pharmacie existe déjà.");
                 }
             }
-            $id_commune = $params["commune"];;
-            if ($this->database->query("SELECT id_commune FROM communes WHERE id_commune='$id_commune'")->rowCount() == 0)
-                throw new PharmacieException("Commune introuvable",404);
+            $id_commune = $params["commune"];
+            if ($pharmacie["id_commune"]!=$id_commune && $this->database->query("SELECT id_commune FROM communes WHERE id_commune='$id_commune'")->rowCount() == 0)
+                throw new PharmacieException("Commune introuvable", 404);
             $QUERY = "UPDATE pharmacies SET
                         nom_pharmacie=:nom,
                         telephone=:telephone,
@@ -114,7 +114,7 @@ class PharmacieRepository  extends BaseRepository
             $QUERY = "INSERT INTO pharmacie_has_produits (id_pharmacie,id_produit,created_by,created_at)
             SELECT :id_pharmacie, id_produit,:created_by,:created_at FROM produits WHERE id_produit NOT IN (SELECT id_produit FROM pharmacie_has_produits WHERE id_pharmacie = $id)";
             $mapping_params = ["id_pharmacie" => $id, "created_by" => $created_by, "created_at" => $created_at];
-            $stmt=$this->database->prepare($QUERY);
+            $stmt = $this->database->prepare($QUERY);
             $stmt->execute($mapping_params);
             $rowCount = $stmt->rowCount();
             $this->database->commit();
@@ -159,6 +159,12 @@ class PharmacieRepository  extends BaseRepository
     {
         $QUERY = "SELECT id_pharmacie as id, nom_pharmacie as nom, telephone, adresse, coordonnees, statut, observation, garde, communes.*
         FROM pharmacies, communes WHERE pharmacies.id_commune=communes.id_commune AND $critere";
+        return  $this->getResultsWithPagination($QUERY, $page, $perPage);
+    }
+
+    public function getCommunes($critere = 'true', $page = 1, $perPage = 10)
+    {
+        $QUERY = "SELECT *  FROM communes WHERE  $critere";
         return  $this->getResultsWithPagination($QUERY, $page, $perPage);
     }
 
