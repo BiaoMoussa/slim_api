@@ -13,18 +13,20 @@ use PDOException;
 class SearchRepository extends BaseRepository
 {
 
-    private function search(array $params,$page = 1, $perPage = 10){
+    private function search(array $params, $page = 1, $perPage = 10)
+    {
 
         $produit = $params["produit"];
-        if(is_numeric($produit)){
+        if (is_numeric($produit)) {
             $produit = (int)$produit;
-        }else{
+        } else {
             $produit = strtolower($produit);
         }
         $params["position"] = $params["position"] ?? null;
 
         if (!isset($params["position"])) {
-            $QUERY_SEARCH = "SELECT ph.*, com.libelle_commune
+            $QUERY_SEARCH = "SELECT ph.*, com.libelle_commune,
+             (( (TIME(NOW()) BETWEEN '08:00:00' AND '20:59:59') AND DAYOFWEEK(NOW()) NOT IN (1, 7)) OR ph.garde=1) as etat_ouverture
             FROM pharmacie_has_produits  php,
              pharmacies  ph, produits pr,
               categories cat,communes com
@@ -34,10 +36,13 @@ class SearchRepository extends BaseRepository
               AND ph.id_commune = com.id_commune
               AND php.statut=1
               AND ph.statut=1
-              AND (pr.id_produit='$produit' OR LOWER(pr.designation)='$produit') ";
+              AND (pr.id_produit='$produit' OR LOWER(pr.designation)='$produit')
+              ORDER BY ph.garde, etat_ouverture DESC
+               ";
         } else {
             $position = $params["position"];
             $QUERY_SEARCH = "SELECT ph.* , com.libelle_commune,
+            (( (TIME(NOW()) BETWEEN '08:00:00' AND '20:59:59') AND DAYOFWEEK(NOW()) NOT IN (1, 7)) OR ph.garde=1) as etat_ouverture,
             ROUND(haversine(extract_latitude('$position'),extract_longitude('$position'),
             extract_latitude(ph.coordonnees),extract_longitude(ph.coordonnees))) as distance_km
             FROM pharmacie_has_produits  php,
@@ -50,7 +55,8 @@ class SearchRepository extends BaseRepository
               AND php.statut=1
               AND ph.statut=1
               AND (pr.id_produit='$produit' OR LOWER(pr.designation)='$produit') 
-              ORDER BY distance_km ASC
+              ORDER BY distance_km ASC,
+              ph.garde, etat_ouverture DESC
               ";
         }
 
@@ -66,8 +72,8 @@ class SearchRepository extends BaseRepository
 
         $numero_telephone = $connectedAccount["numero_telephone"];
 
-        if($numero_telephone)
-        $solde_recherche = $this->database->query("SELECT solde_recherche FROM comptes WHERE numero_telephone='$numero_telephone'")->fetchColumn();
+        if ($numero_telephone)
+            $solde_recherche = $this->database->query("SELECT solde_recherche FROM comptes WHERE numero_telephone='$numero_telephone'")->fetchColumn();
         else $solde_recherche = -1;
 
 
@@ -78,8 +84,8 @@ class SearchRepository extends BaseRepository
 
 
 
-        $results = $this->search($params,$page,$perPage)["content"];
-       
+        $results = $this->search($params, $page, $perPage)["content"];
+
         $nombre_resultat = count($results);
 
         $searchCount = $this->database->query("SELECT id_recherche FROM recherches")->rowCount();
@@ -142,7 +148,7 @@ class SearchRepository extends BaseRepository
                 }
             }
             $this->database->commit();
-            return  $this->search($params,$page,$perPage);
+            return  $this->search($params, $page, $perPage);
         } catch (Exception $exception) {
             $this->database->rollBack();
             throw $exception;
@@ -300,15 +306,15 @@ class SearchRepository extends BaseRepository
 
         if (!empty($recherches)) {
             foreach ($recherches as $index => $recherche) {
-               
+
                 $id_recherche = $recherche["id_recherche"];
 
                 $QUERY_GET_SEARCH_RESULTS = "SELECT * FROM  resultats_recherche WHERE id_recherche='$id_recherche'";
 
                 $resulat = $this->database->query($QUERY_GET_SEARCH_RESULTS)->fetch(PDO::FETCH_ASSOC);
-                
+
                 $recherches[$index]["resultat"]["nombre"] = $resulat["nombre_resultat"];
-                
+
                 if ($resulat["nombre_resultat"] > 0) {
 
                     $id_resultat = $resulat["id_resultat"];
@@ -324,7 +330,7 @@ class SearchRepository extends BaseRepository
                 }
             }
         }
-        return array_merge(["nombre_recherches" => count($recherches),"recherches"=>$recherches]); ;
+        return array_merge(["nombre_recherches" => count($recherches), "recherches" => $recherches]);;
     }
 
     public function changePassowrd($id, $oldPassword, $newPassowrd)
