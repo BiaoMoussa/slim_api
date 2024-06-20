@@ -35,30 +35,30 @@ $app->get('/error', "App\Controller\UserController:handleError");
 /**
  * Recherche de produits
  */
-$app->post('/search', 'App\Controller\SearchController:make')->add(new SearchSigninMiddleware); 
+$app->post('/search', 'App\Controller\SearchController:make')->add(new SearchSigninMiddleware);
 
 
 /**
  * Création de compte
  */
-$app->post('/sign-up', 'App\Controller\SearchController:signup'); 
+$app->post('/sign-up', 'App\Controller\SearchController:signup');
 
 
 /**
  * Sign-in
  */
-$app->post('/sign-in', 'App\Controller\SearchController:signin');  
+$app->post('/sign-in', 'App\Controller\SearchController:signin');
 
 
 /**
  * Voir le profil
  */
-$app->get('/profil', 'App\Controller\SearchController:profil')->add(new SearchSigninMiddleware);  
+$app->get('/profil', 'App\Controller\SearchController:profil')->add(new SearchSigninMiddleware);
 
 /**
  * Voir le profil
  */
-$app->put('/update', 'App\Controller\SearchController:updateAccount')->add(new SearchSigninMiddleware);  
+$app->put('/update', 'App\Controller\SearchController:updateAccount')->add(new SearchSigninMiddleware);
 
 /**
  * Changement de mot de passe
@@ -125,9 +125,10 @@ $app->group('/v1', function () use ($app): void {
     $app->group('/parametres', function () use ($app): void {
         $app->get('/{id}', "App\Admin\Controller\PharmacieController:getOne");
         $app->put('/{id}', "App\Admin\Controller\PharmacieController:update");
-        
-       
     })->add(new Auth);
+
+    // Les statistiques
+    $app->get('/stats/{id}', "App\Admin\Controller\StatsController:getStat");
 
     $app->group("/stocks", function () use ($app): void {
         // $app->get('', "App\Admin\Controller\PharmacieHasProduitController:getAll");
@@ -166,7 +167,7 @@ $app->group('/v1/admin', function () use ($app): void {
         $app->put('/{id}', "App\Admin\Controller\ActionController:update");
         $app->delete('/{id}', "App\Admin\Controller\ActionController:delete");
     });
-    
+
     $app->group('/profils', function () use ($app): void {
         $app->group('/actions', function () use ($app): void {
             $app->get('/{id}', "App\Admin\Controller\ProfilController:getProfilActions");

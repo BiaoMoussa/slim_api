@@ -37,4 +37,15 @@ class StatsController extends BaseController
 
         return $this->jsonResponseWithoutMessage($response, 'success', $encodeJson, 200);
     }
+
+
+    public function getStat(Request $request, Response $response, array $args): Response
+    {
+        $pharmacie = $args['id'];
+        $statsRepository = new StatsRepository;
+    
+        $encodeJson = $statsRepository->getStatistique($pharmacie);
+
+        return $this->jsonResponseWithoutMessage($response, 'success', $encodeJson, 200);
+    }
 }

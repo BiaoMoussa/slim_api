@@ -179,6 +179,143 @@ class StatsRepository  extends BaseRepository
     }
 
 
+    public function getStatistique($pharmacie)
+    {
+        /*******************************
+         * Stats sur les recherches
+         ******************************/
+        // 1. Nombre total de recherches
+        $nb_search = $this->database->query("SELECT * FROM recherches")->rowCount();
+
+        // 2. Nombre total de recherches avec resultat
+        $search_with_result = $this->database->query(
+            "SELECT * FROM `lignes_resultat_recherche` WHERE id_pharmacie = $pharmacie;"
+        )->rowCount();
+
+        // 3. Nombre total de recherches sans resultat
+        $search_without_result = $nb_search - $search_with_result;
+
+        /************************************
+         * Fin stats sur les recherches
+         ************************************/
+
+
+
+
+        /*********************************
+         * Stats sur les produits
+         ********************************/
+        //1. Le nombre total de produit
+        $nb_produit = $this->database->query("SELECT * FROM produits")->rowCount();
+
+        //2. Le nombre total de produit disponibles
+        $nb_produit_disponible = $this->database->query(
+            "SELECT produits.id_produit 
+          FROM produits 
+          WHERE produits.id_produit IN (
+          SELECT id_produit 
+          FROM pharmacie_has_produits 
+          WHERE produits.id_produit AND pharmacie_has_produits.statut=1 AND pharmacie_has_produits.id_pharmacie=$pharmacie
+          )
+          "
+        )->rowCount();
+
+        //3. Le nombre total de produit non disponibles
+        $nb_produit_indisponible = $this->database->query(
+            "SELECT produits.id_produit 
+          FROM produits 
+          WHERE produits.id_produit IN (
+          SELECT id_produit 
+          FROM pharmacie_has_produits 
+          WHERE produits.id_produit AND pharmacie_has_produits.statut=0 AND pharmacie_has_produits.id_pharmacie=$pharmacie
+          )
+          "
+        )->rowCount();
+        // 4. Le nombre de produits par catégorie
+        $nb_produit_par_categorie = $this->database->query(
+            "SELECT categories.libelle_categorie as categorie, COUNT(produits.id_produit) as nb_produit , couleur, (COUNT(produits.id_produit)/$nb_produit)*100 as ratio
+          FROM produits , categories
+          WHERE produits.id_categorie = categories.id_categorie
+          GROUP BY categories.libelle_categorie
+          "
+        )->fetchAll(PDO::FETCH_ASSOC);
+
+        //5.Les 20 premiers produits les plus recherchés avec ou sans resulats
+        $produits_plus_recherches = $this->database->query(
+            "SELECT produits.designation,
+            COUNT(recherches.id_produit) as recherches,
+            COUNT(CASE WHEN resultats_recherche.nombre_resultat > 0 THEN 1 END) as avec_resulat,
+            COUNT(CASE WHEN resultats_recherche.nombre_resultat = 0 THEN 1 END) as sans_resulat
+            FROM produits, recherches, resultats_recherche
+            WHERE produits.id_produit = recherches.id_produit
+            AND resultats_recherche.id_recherche = recherches.id_recherche
+            GROUP BY produits.designation
+            ORDER BY recherches DESC
+            LIMIT 0,20
+            "
+        )->fetchAll(PDO::FETCH_ASSOC);
+        /*********************************
+         * Fin Stats sur les produits
+         ********************************/
+
+
+        /********************************** 
+         * Stats sur les categorie
+         ************************************/
+      
+
+        //4. Le nombre de produit disponible et non disponible par categorie
+        $nb_produit_disponible_par_categorie = $this->database->query(
+            "SELECT categories.libelle_categorie as categorie,
+        COUNT(CASE WHEN pharmacie_has_produits.statut = '1' THEN 1 END) as nb_disponible,
+        COUNT(CASE WHEN pharmacie_has_produits.statut = '0' THEN 1 END) as nb_indisponible
+        FROM produits, categories, pharmacie_has_produits
+        WHERE produits.id_produit = pharmacie_has_produits.id_produit
+        AND produits.id_categorie=categories.id_categorie
+        AND pharmacie_has_produits.id_pharmacie = $pharmacie
+        GROUP BY categories.libelle_categorie;
+          "
+        )->fetchAll(PDO::FETCH_ASSOC);
+
+
+        //5. Les 10 derniers produit recherchés dans une pharmacie
+        $tens_produit_rechercher = $this->database->query(
+            "SELECT * FROM produits, recherches, resultats_recherche, lignes_resultat_recherche 
+            WHERE produits.id_produit=recherches.id_produit AND resultats_recherche.id_recherche=recherches.id_recherche 
+            AND resultats_recherche.id_resultat=lignes_resultat_recherche.id_resultat 
+            AND lignes_resultat_recherche.id_pharmacie=$pharmacie 
+            ORDER BY lignes_resultat_recherche.id_ligne_resulat_recherche DESC LIMIT 0,10;
+          "
+        )->fetchAll(PDO::FETCH_ASSOC);
+        /** *************************
+         * Fin stats pharmacie 
+         ************************/
+
+        return  [
+            "searchs" => [
+                "total" => $nb_search,
+                "with_result" => $search_with_result,
+                "without_result" => $search_without_result,
+                "with_ratio" => round(($search_with_result / $nb_search) * 100,3),
+                "without_ratio" => round(($search_without_result / $nb_search) * 100,3),
+            ],
+            "produits" => [
+                "total" => $nb_produit,
+                "disponible" => $nb_produit_disponible,
+                "indisponible" => $nb_produit_indisponible,
+                "disponible_ratio" => round(($nb_produit_disponible / $nb_produit) * 100,3),
+                "indisponible_ratio" => round(($nb_produit_indisponible / $nb_produit) * 100,3),
+                "produit_per_categorie" => $nb_produit_par_categorie,
+                "produit_plus_recherches" => $produits_plus_recherches
+            ],
+            "pharmacies" => [
+                "disponibilite" => $nb_produit_disponible_par_categorie,
+                "tens_produit_rechercher_trouver"=> $tens_produit_rechercher
+            ]
+        ];
+    }
+
+
     public function getOne($id, $critere = "true")
     {
     }
