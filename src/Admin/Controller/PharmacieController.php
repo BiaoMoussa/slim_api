@@ -120,6 +120,36 @@ class PharmacieController extends BaseController
         return $this->jsonResponseWithoutMessage($response, 'success', $pharmacies, 200);
     }
 
+
+    public function getCommunes(Request $request, Response $response): Response
+    {
+        $queryParams = $request->getQueryParams();
+        $repository = new PharmacieRepository;
+        $critere = "true ";
+        if (isset($queryParams["id"]) && !empty($queryParams["id"])) {
+            $id = $queryParams["id"];
+            $critere .= " AND id_commune='$id'";
+        }
+        if (isset($queryParams["libelle"]) && !empty($queryParams["libelle"])) {
+            $libelle = strtolower($queryParams["libelle"]);
+            $critere .= " AND LOWER(libelle_commune) LIKE '%$libelle%'";
+        }
+
+        if (isset($queryParams["perPage"]) && !empty($queryParams["perPage"])) {
+            $perPage = (int)$queryParams["perPage"];
+        } else {
+            $perPage = 10;
+        }
+
+        if (isset($queryParams["page"]) && !empty($queryParams["page"])) {
+            $page = (int)$queryParams["page"];
+        } else {
+            $page = 1;
+        }
+        $communes = $repository->getCommunes($critere, $page, $perPage);
+        return $this->jsonResponseWithoutMessage($response, 'success', $communes, 200);
+    }
+
     public function addAdmin(Request $request, Response $response, array $args): Response
     {
         $id = $args['id'];

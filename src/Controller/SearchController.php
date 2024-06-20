@@ -159,7 +159,7 @@ class SearchController extends BaseController
         $repository = new SearchRepository();
         $result = $repository->insert($params, $page, $perPage);
 
-        array_unshift($result["content"], ["nombre" => count($result["content"])]);
+       
 
         return $this->jsonResponseWithoutMessage($response, 'success', $result, 200);
     }
@@ -185,7 +185,7 @@ class SearchController extends BaseController
     private function validateUpdate($params)
     {
         if (isset($params["produit"]) && !is_null($params["produit"])) {
-            if (!is_numeric($params["produit"])) throw new SearchException("produit doit être un entier");
+            if (!is_string($params["produit"])) throw new SearchException("produit doit être un entier");
         }
         if (isset($params["position"]) && !is_null($params["position"])) {
             $this->isGeolocationCoordinatesValid($params["position"], new SearchException("Position n'est pas validate. Veuillez donner des coordonnées valides."));

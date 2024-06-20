@@ -15,7 +15,12 @@ class SearchRepository extends BaseRepository
 
     private function search(array $params,$page = 1, $perPage = 10){
 
-        $produit = (int)$params["produit"];
+        $produit = $params["produit"];
+        if(is_numeric($produit)){
+            $produit = (int)$produit;
+        }else{
+            $produit = strtolower($produit);
+        }
         $params["position"] = $params["position"] ?? null;
 
         if (!isset($params["position"])) {
@@ -29,7 +34,7 @@ class SearchRepository extends BaseRepository
               AND ph.id_commune = com.id_commune
               AND php.statut=1
               AND ph.statut=1
-              AND pr.id_produit='$produit' ";
+              AND (pr.id_produit='$produit' OR LOWER(pr.designation)='$produit') ";
         } else {
             $position = $params["position"];
             $QUERY_SEARCH = "SELECT ph.* , com.libelle_commune,
@@ -44,7 +49,7 @@ class SearchRepository extends BaseRepository
               AND ph.id_commune = com.id_commune
               AND php.statut=1
               AND ph.statut=1
-              AND pr.id_produit='$produit' 
+              AND (pr.id_produit='$produit' OR LOWER(pr.designation)='$produit') 
               ORDER BY distance_km ASC
               ";
         }
@@ -61,12 +66,13 @@ class SearchRepository extends BaseRepository
 
         $numero_telephone = $connectedAccount["numero_telephone"];
 
+        if($numero_telephone)
         $solde_recherche = $this->database->query("SELECT solde_recherche FROM comptes WHERE numero_telephone='$numero_telephone'")->fetchColumn();
-
+        else $solde_recherche = -1;
 
 
         // vérification du solde du compte
-        if (!$solde_recherche || $solde_recherche <= 0) {
+        if (!$solde_recherche || $solde_recherche = 0) {
             throw new SearchException("Votre solde de recherche est insuffisant", 400);
         }
 
