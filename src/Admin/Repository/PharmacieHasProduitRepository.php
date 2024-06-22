@@ -10,13 +10,14 @@ use App\Admin\Exception\PharmacieHasProduitException;
 use PDO;
 use PDOException;
 
-class PharmacieHasProduitRepository  extends BaseRepository
+class PharmacieHasProduitRepository extends BaseRepository
 {
 
     public function __construct()
     {
         $this->database = $GLOBALS["pdo"];
     }
+
     public function insert($params = [])
     {
         try {
@@ -31,7 +32,7 @@ class PharmacieHasProduitRepository  extends BaseRepository
     {
 
         try {
-            $produit =  $this->getOne($id, $critere);
+            $produit = $this->getOne($id, $critere);
 
             $QUERY = "UPDATE pharmacie_has_produits 
                     SET prix=:prix,
@@ -65,7 +66,7 @@ class PharmacieHasProduitRepository  extends BaseRepository
     {
         $QUERY = "SELECT php.*, pr.*, ph.nom_pharmacie, php.statut as statut_produit FROM pharmacie_has_produits php ,produits pr, pharmacies ph 
                      WHERE php.id_produit=pr.id_produit AND php.id_pharmacie=ph.id_pharmacie AND $critere";
-        return  $this->getResultsWithPagination($QUERY, $page, $perPage);
+        return $this->getResultsWithPagination($QUERY, $page, $perPage);
     }
 
     public function getOne($id_pharmacie_has_produit, $critere = 'true')
@@ -82,10 +83,10 @@ class PharmacieHasProduitRepository  extends BaseRepository
     public function exists($critere = 'true'): bool
     {
         $QUERY = "SELECT * FROM groupe_gardes WHERE  $critere";
-        return  $this->database->query($QUERY)->rowCount() > 0;
+        return $this->database->query($QUERY)->rowCount() > 0;
     }
 
-    public function getPharmacieHasProduits($idPharmacie, $critere = "true",$page = 1, $perPage = 10)
+    public function getPharmacieHasProduits($idPharmacie, $critere = "true", $page = 1, $perPage = 10)
     {
         $this->pharmacieExists($idPharmacie);
         $QUERY = "SELECT pr.*,php.*,cat.* FROM pharmacie_has_produits php ,produits pr, pharmacies ph , categories cat
@@ -93,7 +94,7 @@ class PharmacieHasProduitRepository  extends BaseRepository
                  AND php.id_pharmacie=ph.id_pharmacie 
                  AND pr.id_categorie = cat.id_categorie
                  AND ph.id_pharmacie=$idPharmacie AND $critere";
-       return  $this->getResultsWithPagination($QUERY, $page, $perPage);
+        return $this->getResultsWithPagination($QUERY, $page, $perPage);
     }
 
     public function addPharmacieHasProduit($id_pharmacie, $produits = [], $created_by, $created_at)
@@ -105,10 +106,10 @@ class PharmacieHasProduitRepository  extends BaseRepository
             if (!empty($produits)) {
 
                 // $i=0;
-                foreach ($produits as  $value) {
+                foreach ($produits as $value) {
                     $data = [];
                     $this->produitExists($value['id_produit']);
-                    if($this->relationExists($value['id_produit'], $id_pharmacie)) continue;
+                    if ($this->relationExists($value['id_produit'], $id_pharmacie)) continue;
                     $data['id_produit'] = $value['id_produit'];
                     $data['prix'] = $value['prix'];
                     $data['id_pharmacie'] = $id_pharmacie;
@@ -151,18 +152,69 @@ class PharmacieHasProduitRepository  extends BaseRepository
         }
     }
 
+
+    public function loadXlsxFile($idPharmacie, $idProduitsIndisponibles = [], $modified_by)
+    {
+        try {
+            $this->database->beginTransaction();
+            $dataDispo = [];
+            $dataDispo['modified_at'] = date('Y-m-d H:i:s');
+            $dataDispo['modified_by'] = $modified_by;
+            $dataDispo['id_pharmacie'] = $idPharmacie;
+            $QUERY_DISPO = "UPDATE  pharmacie_has_produits php SET statut=1, modified_by=:modified_by,
+                                       modified_at=:modified_at WHERE id_pharmacie=:id_pharmacie";
+            $this->database->prepare($QUERY_DISPO)->execute($dataDispo);
+            if (!empty($idProduitsIndisponibles)) {
+                $QUERY = "UPDATE  pharmacie_has_produits php SET statut=0, modified_by=:modified_by,
+                                       modified_at=:modified_at WHERE id_pharmacie=:id_pharmacie  AND id_produit=:id_produit";
+                $data = [];
+                $data['modified_at'] = date('Y-m-d H:i:s');
+                $data['modified_by'] = $modified_by;
+                $data['id_pharmacie'] = $idPharmacie;
+
+                foreach ($idProduitsIndisponibles as $produit) {
+                    $data['id_produit'] = $produit;
+                    $this->database->prepare($QUERY)->execute($data);
+                }
+
+            } else {
+                throw new PharmacieHasProduitException("Tous les produits sont disponibles.", 400);
+            }
+
+            $this->database->commit();
+            return true;
+        } catch (PharmacieHasProduitException $exception) {
+            $this->database->rollBack();
+            throw $exception;
+        } catch (PDOException $exception) {
+            $this->database->rollBack();
+            throw $exception;
+        }
+    }
+
     public function relationExists($idProduit, $pharmacie)
     {
         return $this->database
-            ->query("SELECT * FROM pharmacie_has_produits WHERE id_pharmacie='$pharmacie' AND id_produit='$idProduit'")
-            ->rowCount() > 0;
+                ->query("SELECT * FROM pharmacie_has_produits WHERE id_pharmacie='$pharmacie' AND id_produit='$idProduit'")
+                ->rowCount() > 0;
+    }
+
+    public function findPharmacieByCode($codePharmacie)
+    {
+        $pharmacie = $this->database
+                ->query("SELECT id_pharmacie,code_pharmacie FROM pharmacies WHERE code_pharmacie='$codePharmacie'")
+                ->fetch();
+        if(!$pharmacie){
+            throw new PharmacieHasProduitException("Pharmacie introuvale",404);
+        }
+        return $pharmacie;
     }
 
     private function produitExists($produit)
     {
         $control_existence_produit = $this->database
-            ->query("SELECT * FROM produits WHERE id_produit='$produit'")
-            ->rowCount() > 0;
+                ->query("SELECT * FROM produits WHERE id_produit='$produit'")
+                ->rowCount() > 0;
         if (!$control_existence_produit) {
             throw new PharmacieHasProduitException("Le produit $produit n'existe pas.");
         }
@@ -171,8 +223,8 @@ class PharmacieHasProduitRepository  extends BaseRepository
     private function pharmacieExists($pharmacie)
     {
         $control_existence_pharmacie = $this->database
-            ->query("SELECT * FROM pharmacies WHERE id_pharmacie='$pharmacie'")
-            ->rowCount() > 0;
+                ->query("SELECT * FROM pharmacies WHERE id_pharmacie='$pharmacie'")
+                ->rowCount() > 0;
         if (!$control_existence_pharmacie) {
             throw new PharmacieHasProduitException("La pharmacie $pharmacie n'existe pas.");
         }

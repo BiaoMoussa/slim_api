@@ -5,7 +5,10 @@ declare(strict_types=1);
 namespace App\Admin\Controller;
 
 use App\Admin\Exception\PharmacieHasProduitException;
+use App\Admin\Helpers\ExcelReadFilter;
 use App\Admin\Repository\PharmacieHasProduitRepository;
+use App\Admin\Repository\PharmacieRepository;
+use PhpOffice\PhpSpreadsheet\Reader\Xlsx as Xlsx;
 use Slim\Http\Request;
 use Slim\Http\Response;
 
@@ -14,7 +17,7 @@ class PharmacieHasProduitController extends BaseController
     public function add(Request $request, Response $response, array $args): Response
     {
 
-        $params  = $request->getParsedBody();
+        $params = $request->getParsedBody();
         $pharmacie = ($params["userLogged"]["user"]->pharmacie == 0) ? $args["id"] : $params["userLogged"]["user"]->pharmacie;
         $params["createdAt"] = date("Y-m-d H:i:s");
         $params["createdBy"] = $params["userLogged"]["user"]->id ?? 0;
@@ -25,11 +28,115 @@ class PharmacieHasProduitController extends BaseController
         return $this->jsonResponseWithData($response, "success", "Produits ajoutés avec succès", $pharmacie, 200);
     }
 
+    public function uploadExcelFile(Request $request, Response $response, array $args): Response
+    {
+        $params = $request->getParsedBody();
+
+        $id_pharmacie = $args["id"];
+
+        if (!$id_pharmacie) {
+            throw new PharmacieHasProduitException("L'id de la pharmacie est obligatoire", 400);
+        }
+
+        $directory = $GLOBALS['upload_directory'];
+
+        $uploadedFiles = $request->getUploadedFiles();
+
+        if($uploadedFiles){
+            if(!isset($uploadedFiles['excel_file']))
+            throw new PharmacieHasProduitException("excel_file est obligatoire", 400);
+        }else{
+            throw new PharmacieHasProduitException("Le fichier est obligatoire", 400);
+        }
+
+        // Récupération du fichier uploader
+        $uploadedFile = $uploadedFiles['excel_file'];
+
+
+        // Contrôle du format du  fichier
+        if (!preg_match('/^PHARM_[A-Z_]+__[0-3][0-9]_[0-1][0-9]_[0-9]{4}\.xlsx$/', $uploadedFile->getClientFilename())) {
+            throw new PharmacieHasProduitException("Non du fichier non attendu !", 400);
+        }
+
+
+        $repository = new PharmacieHasProduitRepository;
+
+        // Utilisateur courant
+        $user = $params["userLogged"]["user"]->id ?? 0;
+
+        try {
+            // Si le chargement s'est bien passé
+            if ($uploadedFile->getError() === UPLOAD_ERR_OK) {
+
+                // Récupération de la pharmacie
+                $code_pharma = (new PharmacieRepository())->getOne($id_pharmacie)['code_pharmacie'];
+
+                
+
+                // Le nom du fichier
+                $filename = $code_pharma . "__" . date('Y-m-d');
+
+                // Upload du fichier
+                $uplodedFilename = $this->moveUploadedFile($directory, $uploadedFile, ['xlsx', 'csv', 'xls'], $filename);
+
+                // Lecture du fichier
+                $xlsxReader = new Xlsx;
+
+                // En lecture seule
+                $xlsxReader->setReadDataOnly(true);
+
+
+                // Le fichier en question 
+                $xlsxFile = $xlsxReader->load($directory . "/" . $uplodedFilename);
+
+                // La feuille de calcul
+                $sheet = $xlsxFile->getActiveSheet();
+
+                // La dernière ligne de la feuille
+                $maxRow = $sheet->getHighestRow();
+
+                // La colone des id de produit
+                $idColumn = "A5:A$maxRow";
+
+                // La colone des id des disponibiltés
+                $dispoColumn = "D5:D$maxRow";
+
+                // Tableau des id de produit
+                $idTab = $sheet->rangeToArray($idColumn);
+
+
+                // Tableau des disponibilites
+                $avalablities = $sheet->rangeToArray($dispoColumn);
+
+                //Sélection des id des produits indisponibles
+                $produit_indisponibles = [];
+
+                // Filtrer les produits indisponbles
+                foreach ($avalablities as $key => $value) {
+                    if (strtoupper($value[0]) == 'NON') {
+                        $idProduitIndisponible = $idTab[$key][0];
+                        array_push($produit_indisponibles, $idProduitIndisponible);
+                    }
+                }
+
+                if ($repository->loadXlsxFile($id_pharmacie, $produit_indisponibles, $user)) {
+                    return $this->jsonResponse($response, "success", "Produits ajoutés avec succès", 200);
+                } else {
+                    throw new PharmacieHasProduitException("Chargement des produits échoué.", 400);
+                }
+            } else {
+                throw new PharmacieHasProduitException("Erreur de chargement du fichier.", 400);
+            }
+        } catch (PharmacieHasProduitException $exception) {
+            throw $exception;
+        }
+    }
+
     public function update(Request $request, Response $response, array $args): Response
     {
         $id = $args["id"];
 
-        $params  = (array)$request->getParsedBody();
+        $params = (array)$request->getParsedBody();
         $params["modified_by"] = $params["userLogged"]["user"]->id ?? null;
         $params["modified_at"] = date("Y-m-d H:i:s");
         $pharmacie = $params["userLogged"]["user"]->pharmacie;
@@ -49,7 +156,7 @@ class PharmacieHasProduitController extends BaseController
 
         $queryParams = $request->getQueryParams();
 
-        $params  = (array)$request->getParsedBody();
+        $params = (array)$request->getParsedBody();
         $pharmacie = $params["userLogged"]["user"]->pharmacie;
         $critere = "true";
         if ($pharmacie > 0) {
@@ -100,7 +207,7 @@ class PharmacieHasProduitController extends BaseController
     public function getOne(Request $request, Response $response, array $args): Response
     {
         $id = $args["id"];
-        $params  = (array)$request->getParsedBody();
+        $params = (array)$request->getParsedBody();
         $pharmacie = $params["userLogged"]["user"]->pharmacie;
         $critere = "true";
         if ($pharmacie > 0) {
@@ -131,6 +238,7 @@ class PharmacieHasProduitController extends BaseController
         $message .= " avec succès !";
         return $this->jsonResponseWithData($response, "success", $message, $produit, 200);
     }
+
     public function delete(Request $request, Response $response, array $args): Response
     {
         $id = $args['id'];
@@ -140,7 +248,7 @@ class PharmacieHasProduitController extends BaseController
 
     private function validate($params)
     {
-        foreach ($params as  $value) {
+        foreach ($params as $value) {
             if (!is_numeric($value['prix'])) throw new PharmacieHasProduitException("Les prix sont des entiers.");
             if (!is_numeric($value['id_produit'])) throw new PharmacieHasProduitException("Les produit sont des entiers.");
         }
@@ -148,7 +256,7 @@ class PharmacieHasProduitController extends BaseController
 
     private function validateProduit($params)
     {
-        foreach ($params as  $value) {
+        foreach ($params as $value) {
             if (!is_numeric($value)) throw new PharmacieHasProduitException("Les produit sont des entiers.");
         }
     }
@@ -166,13 +274,13 @@ class PharmacieHasProduitController extends BaseController
         $id = $args["id"];
         $queryParams = $request->getQueryParams();
 
-        $params  = (array)$request->getParsedBody();
+        $params = (array)$request->getParsedBody();
         $pharmacie = $params["userLogged"]["user"]->pharmacie;
         $critere = "true";
         if ($pharmacie > 0) {
             $critere = "php.id_pharmacie=$pharmacie ";
         }
-        
+
         if (isset($queryParams["pharmacie"]) && !empty($queryParams["pharmacie"])) {
             $pharmacie = $queryParams["pharmacie"];
             $critere .= " AND php.id_pharmacie='$pharmacie'";
@@ -210,10 +318,9 @@ class PharmacieHasProduitController extends BaseController
         } else {
             $page = 1;
         }
-        $pharmacies = (new PharmacieHasProduitRepository)->getPharmacieHasProduits($id,$critere,$page,$perPage);
+        $pharmacies = (new PharmacieHasProduitRepository)->getPharmacieHasProduits($id, $critere, $page, $perPage);
         return $this->jsonResponseWithoutMessage($response, "success", $pharmacies, 200);
     }
-
 
 
     public function deleteGroupePharmacies(Request $request, Response $response, array $args): Response
@@ -236,7 +343,7 @@ class PharmacieHasProduitController extends BaseController
     {
         $this->required($parsedBody, "pharmacies", new PharmacieHasProduitException("pharmacies est obligatoire"));
         if (empty($parsedBody)) throw new PharmacieHasProduitException("pharmacies ne peut être vide");
-        foreach ($parsedBody["pharmacies"] as  $value) {
+        foreach ($parsedBody["pharmacies"] as $value) {
             if (!is_numeric($value)) throw new PharmacieHasProduitException("Les éléments de pharmacies pharmacies sont des entiers.");
         }
     }

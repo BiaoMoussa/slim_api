@@ -170,7 +170,7 @@ class PharmacieRepository  extends BaseRepository
 
     public function getOne($id, $critere = 'true')
     {
-        $QUERY = "SELECT id_pharmacie as id, nom_pharmacie as nom, telephone, adresse, coordonnees, statut, observation, garde, communes.* 
+        $QUERY = "SELECT id_pharmacie as id, nom_pharmacie as nom, telephone, adresse, coordonnees, statut, observation, garde,code_pharmacie, communes.* 
         FROM pharmacies, communes WHERE pharmacies.id_commune=communes.id_commune AND id_pharmacie='$id' AND $critere";
         $pharmacie = $this->database->query($QUERY)->fetch(PDO::FETCH_ASSOC);
         if (empty($pharmacie)) {
@@ -191,7 +191,7 @@ class PharmacieRepository  extends BaseRepository
         if ($admin_exits) {
             throw new PharmacieException("Admin existe déjà.", 400);
         }
-
+        
         $params["nom"] = $params["nom"] ?? "Nom admin " . $pharmacie["nom"];
         $nom_tab = explode(" ", strtolower($params["nom"]));
         $nom_sans_esapce = join("", $nom_tab);
@@ -217,6 +217,7 @@ class PharmacieRepository  extends BaseRepository
             $this->database->commit();
             return $admin;
         } catch (PharmacieException $exception) {
+            $this->database->rollBack();
             throw $exception;
         } catch (PDOException $exception) {
             $this->database->rollBack();

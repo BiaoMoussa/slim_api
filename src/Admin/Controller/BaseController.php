@@ -9,6 +9,7 @@ use Exception;
 use Respect\Validation\Validator;
 use Slim\Container;
 use Slim\Http\Response;
+use Slim\Http\UploadedFile;
 
 abstract class BaseController
 {
@@ -108,4 +109,28 @@ abstract class BaseController
         }
         return $geolocation;
     }
+
+    /**
+     * Moves the uploaded file to the upload directory and assigns it a unique name
+     * to avoid overwriting an existing uploaded file.
+     *
+     * @param string $directory directory to which the file is moved
+     * @param UploadedFile $uploadedFile file uploaded file to move
+     * @return string filename of moved file
+     */
+    protected function moveUploadedFile($directory, UploadedFile $uploadedFile, array $inspectedExtensions = [], $customName=null)
+    {
+        $extension = pathinfo($uploadedFile->getClientFilename(), PATHINFO_EXTENSION);
+        if (!empty($inspectedExtensions) &&!in_array($extension, $inspectedExtensions)) {
+            throw new Exception('Extension du fichier incorrect.', 400);
+        }
+        $basename = pathinfo($uploadedFile->getClientFilename(), PATHINFO_FILENAME); 
+        $filename = $customName?sprintf('%s.%0.8s', $customName, $extension):sprintf('%s.%0.8s', $basename, $extension) ;
+
+        $uploadedFile->moveTo($directory . DIRECTORY_SEPARATOR . $filename);
+
+        return $filename;
+    }
+
+    
 }

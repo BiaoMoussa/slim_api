@@ -140,6 +140,7 @@ $app->group('/v1', function () use ($app): void {
     $app->get('/stats/{id}', "App\Admin\Controller\StatsController:getStat");
 
     $app->group("/stocks", function () use ($app): void {
+        $app->post('/upload/{id}', "App\Admin\Controller\PharmacieHasProduitController:uploadExcelFile");
         // $app->get('', "App\Admin\Controller\PharmacieHasProduitController:getAll");
         // $app->post('/{id}', "App\Admin\Controller\PharmacieHasProduitController:add");
         $app->put('/setStatus/{id}', "App\Admin\Controller\PharmacieHasProduitController:setStatus");
@@ -228,6 +229,7 @@ $app->group('/v1/admin', function () use ($app): void {
             $app->get('/pharmacie/{id}', "App\Admin\Controller\PharmacieHasProduitController:getPharamacieProduits");
             $app->put('/{id}', "App\Admin\Controller\PharmacieHasProduitController:update");
             $app->delete('/{id}', "App\Admin\Controller\PharmacieHasProduitController:delete");
+            $app->post('/upload/{id}', "App\Admin\Controller\PharmacieHasProduitController:uploadExcelFile");
         });
         $app->group("/admin", function () use ($app): void {
             $app->post('/{id}', "App\Admin\Controller\PharmacieController:addAdmin");

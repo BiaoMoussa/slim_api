@@ -257,7 +257,7 @@ class PharmacieController extends BaseController
         if (isset($params["login"]) && !is_null($params["login"])) {
             if (!is_string($params["login"])) throw new PharmacieException("login doit être une chaine de caractère");
             if (strlen($params["login"]) <= 2) throw new PharmacieException("login doit avoir au moins 3 caractères");
-            if (!preg_match("/^([a-z]+)+$/", $params["login"])) throw new PharmacieException("login ne doit comporter que des les lettre de a à z sans accent.");
+            if (!preg_match("/^([a-zA-Z0-9]+)+$/", $params["login"])) throw new PharmacieException("login ne doit comporter que des les lettre de a à z sans accent.");
         }
     }
 }

@@ -14,6 +14,7 @@ $settings = require __DIR__ . '/Settings.php';
 $app = new \Slim\App($settings);
 $app->add(new \CorsSlim\CorsSlim());
 $container = $app->getContainer();
+$GLOBALS['upload_directory'] = __DIR__ . '/../../documents';
 require __DIR__ . '/Dependencies.php';
 require __DIR__ . '/Services.php';
 require __DIR__ . '/Repositories.php';

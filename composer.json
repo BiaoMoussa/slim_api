@@ -27,6 +27,7 @@
         "composer/composer": "1.10.22",
         "firebase/php-jwt": "^5.0",
         "palanik/corsslim": "dev-slim3",
+        "phpoffice/phpspreadsheet": "^1.29",
         "predis/predis": "^1.1",
         "respect/validation": "^1.1",
         "slim/slim": "^3.12.3",
