@@ -52,11 +52,11 @@ class PharmacieHasProduitController extends BaseController
         // Récupération du fichier uploader
         $uploadedFile = $uploadedFiles['excel_file'];
 
-
+         
         // Contrôle du format du  fichier
-        if (!preg_match('/^PHARM_[A-Z_]+__[0-3][0-9]_[0-1][0-9]_[0-9]{4}\.xlsx$/', $uploadedFile->getClientFilename())) {
-            throw new PharmacieHasProduitException("Non du fichier non attendu !", 400);
-        }
+        // if (!preg_match('/^PHARM_[A-Z_]+__[0-3][0-9]_[0-1][0-9]_[0-9]{4}\.xlsx$/', $uploadedFile->getClientFilename())) {
+        //     throw new PharmacieHasProduitException("Non du fichier non attendu !", 400);
+        // }
 
 
         $repository = new PharmacieHasProduitRepository;

@@ -23,14 +23,22 @@ class PharmacieRepository  extends BaseRepository
         $params["observation"] = $params["observation"] ?? "";
         $params["coordonnees"] = $params["coordonnees"] ?? "";
         $telphone = $params["telephone"];
+        $code = $this->database->query("SELECT count(id_pharmacie)  FROM pharmacies")->fetchColumn();
+        if ($code == 0) {
+            $code = 1;
+        } else {
+            $code += 1;
+        }
+
+        $params["code_pharmacie"] = "PHARM_" . $code;
         try {
             if ($this->exists("LOWER(nom_pharmacie)='$nom' || telephone='$telphone'")) {
                 throw new PharmacieException("Cette pharmacie existe déjà.");
             }
             $this->database->beginTransaction();
 
-            $QUERY = "INSERT INTO pharmacies(nom_pharmacie,telephone,adresse,coordonnees, id_commune,observation,created_by,modified_by)
-                VALUES (:nom,:telephone,:adresse,:coordonnees,:commune,:observation,:createdBy,:updatedBy)";
+            $QUERY = "INSERT INTO pharmacies(nom_pharmacie,telephone,adresse,coordonnees,code_pharmacie, id_commune,observation,created_by,modified_by)
+                VALUES (:nom,:telephone,:adresse,:coordonnees,:code_pharmacie,:commune,:observation,:createdBy,:updatedBy)";
             $this->database->prepare($QUERY)->execute($params);
 
             $idPharmacie = $this->database->lastInsertId();
@@ -81,7 +89,7 @@ class PharmacieRepository  extends BaseRepository
                 }
             }
             $id_commune = $params["commune"];
-            if ($pharmacie["id_commune"]!=$id_commune && $this->database->query("SELECT id_commune FROM communes WHERE id_commune='$id_commune'")->rowCount() == 0)
+            if ($pharmacie["id_commune"] != $id_commune && $this->database->query("SELECT id_commune FROM communes WHERE id_commune='$id_commune'")->rowCount() == 0)
                 throw new PharmacieException("Commune introuvable", 404);
             $QUERY = "UPDATE pharmacies SET
                         nom_pharmacie=:nom,
@@ -191,7 +199,7 @@ class PharmacieRepository  extends BaseRepository
         if ($admin_exits) {
             throw new PharmacieException("Admin existe déjà.", 400);
         }
-        
+
         $params["nom"] = $params["nom"] ?? "Nom admin " . $pharmacie["nom"];
         $nom_tab = explode(" ", strtolower($params["nom"]));
         $nom_sans_esapce = join("", $nom_tab);

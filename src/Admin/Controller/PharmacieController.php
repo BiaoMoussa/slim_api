@@ -230,8 +230,12 @@ class PharmacieController extends BaseController
             if (strlen($params["observation"]) < 3) throw new PharmacieException("observation doit avoir au moins 3 caractères.");
         }
         if (isset($params["telephone"])) {
-            if (strlen($params["telephone"]) != 8) throw new PharmacieException("telephone doit avoir  8 caractères.");
-            if (!is_numeric($params["telephone"])) throw new PharmacieException("telephone au mauvais format.");
+            if (!str_starts_with($params["telephone"], "+227")) {
+                throw new PharmacieException("telephone au mauvais format.");
+            }
+            $huitChffres = str_replace('+227', '', $params["telephone"]);
+            if (strlen($huitChffres) != 8) throw new PharmacieException("telephone au mauvais format.");
+            if (!is_numeric($huitChffres)) throw new PharmacieException("telephone au mauvais format.");
         }
 
         if (isset($params["comnune"])) {

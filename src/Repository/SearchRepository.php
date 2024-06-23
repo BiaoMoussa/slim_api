@@ -44,7 +44,7 @@ class SearchRepository extends BaseRepository
             $QUERY_SEARCH = "SELECT ph.* , com.libelle_commune,
             (( (TIME(NOW()) BETWEEN '08:00:00' AND '20:59:59') AND DAYOFWEEK(NOW()) NOT IN (1, 7)) OR ph.garde=1) as etat_ouverture,
             ROUND(haversine(extract_latitude('$position'),extract_longitude('$position'),
-            extract_latitude(ph.coordonnees),extract_longitude(ph.coordonnees))) as distance_km
+            ph.latitude,ph.longitude)) as distance_km, CONCAT(ph.latitude, ', ', ph.longitude) as coordinates
             FROM pharmacie_has_produits  php,
              pharmacies  ph, produits pr,
               categories cat, communes com
