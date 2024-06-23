@@ -39,6 +39,20 @@ $app->post('/search', 'App\Controller\SearchController:make');
 
 
 /**
+ * Statistique Accueil
+ */
+$app->get('/statistique', 'App\Controller\SearchController:getStatistiquePublic'); 
+
+
+
+/**
+ * Statistique Pharmacie de garde
+ */
+$app->get('/pharmacie-garde', 'App\Controller\SearchController:getPharmacieGarde'); 
+
+
+
+/**
  * Création de compte
  */
 $app->post('/sign-up', 'App\Controller\SearchController:signup');

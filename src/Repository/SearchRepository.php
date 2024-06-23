@@ -378,4 +378,122 @@ class SearchRepository extends BaseRepository
     {
         return $this->database->query("SELECT * FROM profils WHERE id_profil='$id' AND $crietre")->rowCount() > 0;
     }
+
+    public function getStatistiquePublic()
+    {
+        /*******************************
+         * Stats sur les recherches
+         ******************************/
+        // 1. Nombre total de recherches
+        $nb_search = $this->database->query("SELECT * FROM recherches")->rowCount();
+
+
+        /************************************
+         * Fin stats sur les recherches
+         ************************************/
+
+
+        /*********************************
+         * Stats sur les produits
+         ********************************/
+
+
+        //1. Le nombre total de produit disponibles
+        $nb_produit = $this->database->query(
+            "SELECT produits.id_produit 
+          FROM produits 
+          "
+        )->rowCount();
+
+
+
+        /*********************************
+         * Fin Stats sur les produits
+         ********************************/
+
+
+        /********************************** 
+         * Stats sur les pharmacies
+         ************************************/
+        //1. Le nombre total de pharmacie
+        $nb_pharmacie = $this->database->query("SELECT * FROM pharmacies")->rowCount();
+
+        //2. Les pharmacies de garde
+        $pharmacie_garde = $this->database->query(
+            "SELECT * 
+          FROM pharmacies , communes
+          WHERE pharmacies.id_commune= communes.id_commune AND  garde=1
+          "
+        )->fetchAll(PDO::FETCH_ASSOC);
+
+        // 3.Le nombre de pharmacie active
+        $nb_pharmacie_active = $this->database->query(
+            "SELECT pharmacies.id_pharmacie 
+          FROM pharmacies 
+          WHERE statut=1
+          "
+        )->rowCount();
+
+
+        // 3.Le nombre de pharmacie de garde
+        $nb_pharmacie_garde = $this->database->query(
+            "SELECT pharmacies.id_pharmacie 
+          FROM pharmacies 
+          WHERE garde=1
+          "
+        )->rowCount();
+
+
+
+
+
+        return  [
+            "searchs" => [
+                "total" => $nb_search
+            ],
+            "produits" => [
+                "total" => $nb_produit
+            ],
+            "pharmacies" => [
+                "nombre_garde" => $nb_pharmacie_garde,
+                "total" => $nb_pharmacie,
+                "garde" => $pharmacie_garde,
+                "active" => $nb_pharmacie_active
+            ]
+        ];
+    }
+
+
+    public function pharmacieGarde(array $params)
+    {
+
+
+        $params["position"] = $params["position"] ?? null;
+
+        if (!isset($params["position"])) {
+            $QUERY_PHARAMCIE = "SELECT ph.*, com.libelle_commune
+            FROM pharmacies  ph, communes com
+              WHERE ph.id_commune = com.id_commune
+              AND ph.garde=1
+              ORDER BY ph.garde DESC
+               ";
+        } else {
+            $position = $params["position"];
+            $QUERY_PHARAMCIE = "SELECT ph.* , com.libelle_commune,
+            ROUND(haversine(extract_latitude('$position'),extract_longitude('$position'),
+            ph.latitude,ph.longitude)) as distance_km, CONCAT(ph.latitude, ', ', ph.longitude) as coordinates
+            FROM 
+             pharmacies  ph, communes com
+              WHERE ph.id_commune = com.id_commune
+              AND ph.garde=1
+              ORDER BY ph.garde DESC, distance_km ASC
+              
+              ";
+        }
+
+        $pharmacie_garde = $this->database->query($QUERY_PHARAMCIE)->fetchAll(PDO::FETCH_ASSOC);
+
+
+        return  $pharmacie_garde;
+    }
 }

@@ -265,4 +265,39 @@ class SearchController extends BaseController
             if (strlen($params["prenom"]) <= 1) throw new SearchException("prenom doit avoir au moins 2 caractères");
         }
     }
+
+
+    public function getStatistiquePublic(Request $request, Response $response): Response
+    {
+        $queryParams = (array)$request->getQueryParams();
+        $repository = new SearchRepository;
+        $critere = " true ";
+        
+
+        if (isset($queryParams["perPage"]) && !empty($queryParams["perPage"])) {
+            $perPage = (int)$queryParams["perPage"];
+        } else {
+            $perPage = 10;
+        }
+
+        if (isset($queryParams["page"]) && !empty($queryParams["page"])) {
+            $page = (int)$queryParams["page"];
+        } else {
+            $page = 1;
+        }
+
+        $encodeJson = $repository->getStatistiquePublic($critere, $page, $perPage);
+
+        return $this->jsonResponseWithoutMessage($response, 'success', $encodeJson, 200);
+    }
+
+    public function getPharmacieGarde(Request $request, Response $response): Response
+    {
+        $queryParams = (array)$request->getQueryParams();
+        $repository = new SearchRepository;
+   
+        $encodeJson = $repository->pharmacieGarde($queryParams);
+
+        return $this->jsonResponseWithoutMessage($response, 'success', $encodeJson, 200);
+    }
 }
