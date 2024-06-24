@@ -12,6 +12,15 @@ use Slim\Http\Response;
 
 class PharmacieController extends BaseController
 {
+    private function checkPharmcyAcess(Request $request, Response $response, array $args)
+    {
+        $params = $request->getParsedBody();
+        $id_pharmacie = $args["id"];
+        $user = $params["userLogged"]["user"];
+        if ($user->pharmacie) {
+            if ($id_pharmacie != $user->pharmacie) throw new PharmacieException("Vous n'avez pas accès à cette pharmacie !", 403);
+        }
+    }
 
     public function add(Request $request, Response $response): Response
     {
@@ -27,9 +36,12 @@ class PharmacieController extends BaseController
 
     public function update(Request $request, Response $response, array $args): Response
     {
+        // Contrôle d'accès à la pharmacie
+        $this->checkPharmcyAcess($request, $response, $args);
         $id = $args["id"];
         $params  = (array)$request->getParsedBody();
-        $params["updatedBy"] = $params["userLogged"]["user"]->id ?? null;
+        $user = $params["userLogged"]["user"];
+        $params["updatedBy"] = $user->id ?? null;
         $params["updatedAt"] = date("Y-m-d H:i:s");
         unset($params["userLogged"]);
         $this->validateUpdate($params);
@@ -40,6 +52,8 @@ class PharmacieController extends BaseController
 
     public function synProduit(Request $request, Response $response, array $args): Response
     {
+        // Contrôle d'accès à la pharmacie
+        $this->checkPharmcyAcess($request, $response, $args);
         $id = $args["id"];
         $params  = (array)$request->getParsedBody();
         $params["created_by"] = $params["userLogged"]["user"]->id ?? null;
@@ -152,6 +166,8 @@ class PharmacieController extends BaseController
 
     public function addAdmin(Request $request, Response $response, array $args): Response
     {
+        // Contrôle d'accès à la pharmacie
+        $this->checkPharmcyAcess($request, $response, $args);
         $id = $args['id'];
         $params = $request->getParsedBody();
         $params["updatedBy"] = $params["userLogged"]["user"]->id ?? null;
@@ -165,6 +181,8 @@ class PharmacieController extends BaseController
 
     public function updateAdmin(Request $request, Response $response, array $args): Response
     {
+        // Contrôle d'accès à la pharmacie
+        $this->checkPharmcyAcess($request, $response, $args);
         $id = $args["id"];
         $params  = (array)$request->getParsedBody();
         $params["updatedBy"] = $params["userLogged"]["user"]->id ?? null;
@@ -185,6 +203,8 @@ class PharmacieController extends BaseController
 
     public function getOne(Request $request, Response $response, array $args): Response
     {
+        // Contrôle d'accès à la pharmacie
+        $this->checkPharmcyAcess($request, $response, $args);
         $id = $args["id"];
         $action = (new PharmacieRepository)->getOne($id);
         return $this->jsonResponseWithoutMessage($response, 'success', $action, 200);
@@ -192,6 +212,8 @@ class PharmacieController extends BaseController
 
     public function setStatus(Request $request, Response $response, array $args): Response
     {
+        // Contrôle d'accès à la pharmacie
+        $this->checkPharmcyAcess($request, $response, $args);
         $id = $args['id'];
         $params = $request->getParsedBody();
         $this->required($params, "status", new PharmacieException("status est obligatoire"));
@@ -261,7 +283,7 @@ class PharmacieController extends BaseController
         if (isset($params["login"]) && !is_null($params["login"])) {
             if (!is_string($params["login"])) throw new PharmacieException("login doit être une chaine de caractère");
             if (strlen($params["login"]) <= 2) throw new PharmacieException("login doit avoir au moins 3 caractères");
-            if (!preg_match("/^([a-zA-Z0-9]+)+$/", $params["login"])) throw new PharmacieException("login ne doit comporter que des les lettre de a à z sans accent.");
+            if (!preg_match("/^([a-zA-Z0-9]+)+$/", $params["login"])) throw new PharmacieException("login ne doit comporter que des les lettre de a à z (ou Majuscule) ou des chiffres, sans accent et sans espace.");
         }
     }
 }

@@ -203,9 +203,9 @@ class PharmacieRepository  extends BaseRepository
         $params["nom"] = $params["nom"] ?? "Nom admin " . $pharmacie["nom"];
         $nom_tab = explode(" ", strtolower($params["nom"]));
         $nom_sans_esapce = join("", $nom_tab);
-        $libelle_profile = "profilAdmin-" . strtolower(trim($params["nom"]));
+        $libelle_profile = "admin_" . strtolower(trim($pharmacie["nom"]));
         $params["prenom"] = $params["prenom"] ?? "Prénom admin " . $pharmacie["nom"];
-        $params["login"] = $nom_sans_esapce;
+        $params["login"] = $params["login"] ?? $nom_sans_esapce;
         $params["password"] = $params["password"] ?? "Default2024";
         $actions = $this->database->query("SELECT id_action FROM actions WHERE level='2'")->fetchAll(PDO::FETCH_COLUMN); // Récupération des actions de level 2
         try {
@@ -215,13 +215,13 @@ class PharmacieRepository  extends BaseRepository
             $profil["updatedBy"] = $params["updatedBy"];
             $profil["pharmacie"] = $id;
             $insertedProfil = (new ProfilRepository)->insert($profil);
-            $idProfil = $this->database->lastInsertId();
+            $idProfil = $insertedProfil["id"];
             $params["pharmacie"] = $id;
             $params["profil"] = $insertedProfil["id"];
-            $admin = (new UserRepository)->insert($params);
             if (count($actions) > 0) {
-                (new ProfilRepository)->addActions($idProfil, $actions);
+                $this->addAdminProfilActions($idProfil, $actions);
             }
+            $admin = (new UserRepository)->insert($params);
             $this->database->commit();
             return $admin;
         } catch (PharmacieException $exception) {
@@ -233,6 +233,43 @@ class PharmacieRepository  extends BaseRepository
         }
     }
 
+    private function addAdminProfilActions($idProfil, $actions = [], $critere = "true")
+    {
+        try {
+            $QUERY = "INSERT INTO profil_has_actions (id_profil,id_action) VALUES (:id_profil,:id_action)";
+            if (!empty($actions)) {
+                foreach ($actions as $action) {
+                    if ($this->adminActionsExists($action)) {
+                        if (!$this->relationAdminProfilExists($idProfil, $action)) {
+                            $query = $this->database->prepare($QUERY);
+                            $query->bindParam("id_profil", $idProfil);
+                            $query->bindParam("id_action", $action);
+                            $query->execute();
+                        }
+                    }
+                }
+            }
+            return true;
+        } catch (PharmacieException $exception) {
+            throw $exception;
+        } catch (PDOException $exception) {
+            throw $exception;
+        }
+    }
+
+    private function relationAdminProfilExists($idProfil, $idAction)
+    {
+        return  $this->database
+            ->query("SELECT * FROM profil_has_actions WHERE id_action='$idAction' AND id_profil='$idProfil'")
+            ->rowCount() > 0;
+    }
+
+    private function adminActionsExists($idAction)
+    {
+        return $this->database
+            ->query("SELECT * FROM actions WHERE id_action='$idAction' AND level='2'")
+            ->rowCount() > 0;
+    }
     public function updateAdmin($id, $params)
     {
         try {
