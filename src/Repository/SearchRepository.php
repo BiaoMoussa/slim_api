@@ -65,6 +65,7 @@ class SearchRepository extends BaseRepository
 
     public function insert($params = [],  $page = 1, $perPage = 10)
     {
+       
         $produit = (int)$params["produit"];
         $params["position"] = $params["position"] ?? null;
 
@@ -140,7 +141,9 @@ class SearchRepository extends BaseRepository
                 $update_ok = $this->database->prepare($QUERY_UPDATE_SOLDE_RECHERCHE)->execute($faturation_params);
 
                 foreach ($results as $key => $result) {
-                    $insert_lignes_resultat_params["id_pharmacie"] = $result->id_pharmacie;
+                  
+                    $insert_lignes_resultat_params["id_pharmacie"] = $result["id_pharmacie"];
+      
                     $insert_ligne_result_ok = $this->database->prepare($QUERY_INSERT_LIGNE_RESULT)->execute($insert_lignes_resultat_params);
 
                     if (!$insert_ligne_result_ok)
