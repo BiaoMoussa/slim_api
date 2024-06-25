@@ -25,7 +25,7 @@ class SearchRepository extends BaseRepository
         $params["position"] = $params["position"] ?? null;
 
         if (!isset($params["position"])) {
-            $QUERY_SEARCH = "SELECT ph.*, com.libelle_commune,
+            $QUERY_SEARCH = "SELECT ph.*, com.libelle_commune,CONCAT(ph.latitude, ', ', ph.longitude) as coordinates,
              (( (TIME(NOW()) BETWEEN '08:00:00' AND '20:59:59') AND DAYOFWEEK(NOW()) NOT IN (1, 7)) OR ph.garde=1) as etat_ouverture
             FROM pharmacie_has_produits  php,
              pharmacies  ph, produits pr,
@@ -420,7 +420,7 @@ class SearchRepository extends BaseRepository
 
         //2. Les pharmacies de garde
         $pharmacie_garde = $this->database->query(
-            "SELECT * 
+            "SELECT * ,CONCAT(latitude, ', ',longitude) as coordinates
           FROM pharmacies , communes
           WHERE pharmacies.id_commune= communes.id_commune AND  garde=1
           "
@@ -471,7 +471,7 @@ class SearchRepository extends BaseRepository
         $params["position"] = $params["position"] ?? null;
 
         if (!isset($params["position"])) {
-            $QUERY_PHARAMCIE = "SELECT ph.*, com.libelle_commune
+            $QUERY_PHARAMCIE = "SELECT ph.*, com.libelle_commune,CONCAT(ph.latitude, ', ', ph.longitude) as coordinates
             FROM pharmacies  ph, communes com
               WHERE ph.id_commune = com.id_commune
               AND ph.garde=1
