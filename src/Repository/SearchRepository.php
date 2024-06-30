@@ -37,7 +37,7 @@ class SearchRepository extends BaseRepository
               AND php.statut=1
               AND ph.statut=1
               AND (pr.id_produit='$produit' OR LOWER(pr.designation)='$produit')
-              ORDER BY ph.garde, etat_ouverture DESC
+              ORDER BY etat_ouverture DESC
                ";
         } else {
             $position = $params["position"];
@@ -55,7 +55,7 @@ class SearchRepository extends BaseRepository
               AND php.statut=1
               AND ph.statut=1
               AND (pr.id_produit='$produit' OR LOWER(pr.designation)='$produit') 
-              ORDER BY  etat_ouverture,ph.garde DESC, distance_km ASC
+              ORDER BY  etat_ouverture DESC, distance_km ASC
               
               ";
         }
