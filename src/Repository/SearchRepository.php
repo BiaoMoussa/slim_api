@@ -484,7 +484,7 @@ class SearchRepository extends BaseRepository
             $position = $params["position"];
             $QUERY_PHARAMCIE = "SELECT ph.* , com.libelle_commune,
             ROUND(haversine(extract_latitude('$position'),extract_longitude('$position'),
-            ph.latitude,ph.longitude)) as distance_km, CONCAT(ph.latitude, ', ', ph.longitude) as coordinates
+            ph.latitude,ph.longitude),1) as distance_km, CONCAT(ph.latitude, ', ', ph.longitude) as coordinates
             FROM 
              pharmacies  ph, communes com
               WHERE ph.id_commune = com.id_commune
