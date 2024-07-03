@@ -39,13 +39,12 @@ class SettingsController extends BaseController
     public function update(Request $request, Response $response, array $args): Response
     {
         $params  = $request->getParsedBody();
-        $params["updated_by"] = $params["userLogged"]["user"]->id??null;
+        $params["updated_by"] = $params["userLogged"]["user"]->id ?? null;
         unset($params["userLogged"]);
         $this->validate($params);
         $config = (new SettingsRepository)->set($params);
         return $this->jsonResponseWithData($response, "success", "Paramètres mis à jour avec succès", $config, 200);
     }
-
     /**
      * @param Request $request
      * @param Response $response
@@ -89,7 +88,7 @@ class SettingsController extends BaseController
      */
     public function find(Request $request, Response $response, array $args): Response
     {
-        return $this->jsonResponseWithoutMessage($response, "success",(new SettingsRepository())->find(),200);
+        return $this->jsonResponseWithoutMessage($response, "success", (new SettingsRepository())->find(), 200);
     }
 
 
@@ -102,9 +101,66 @@ class SettingsController extends BaseController
      */
     public function findForPublic(Request $request, Response $response, array $args): Response
     {
-        return $this->jsonResponseWithoutMessage($response, "success",(new SettingsRepository())->findForPublic(),200);
+        return $this->jsonResponseWithoutMessage($response, "success", (new SettingsRepository())->findForPublic(), 200);
     }
 
+
+    /**
+     * Charger le logo l'application
+     * @param Request $request
+     * @param Response $response
+     * @param array $args
+     * @return Response
+     */
+    public function loadLogo(Request $request, Response $response, array $args): Response
+    {
+        $repository = new SettingsRepository();
+         
+        $request->getParsedBody();
+        $params = [];
+        $params["updated_by"] = $params["userLogged"]["user"]->id ?? null;
+
+        $directory = $filepath = __DIR__ . '/../../../public/assets/images/' ;
+
+        $uploadedFiles = $request->getUploadedFiles();
+
+        if ($uploadedFiles) {
+            if (!isset($uploadedFiles['logo_file']))
+                throw new SettingsException("logo_file est obligatoire", 400);
+        } else {
+            throw new SettingsException("logo_file est obligatoire", 400);
+        }
+
+        // Récupération du fichier uploader
+        $uploadedFile = $uploadedFiles['logo_file'];
+        try {
+            // Si le chargement s'est bien passé
+            if ($uploadedFile->getError() === UPLOAD_ERR_OK) {
+
+
+                // Le nom du fichier
+                $filename = "logo";
+
+
+                // Upload du fichier
+                $uplodedFilename = $this->moveUploadedFile($directory, $uploadedFile, ['png', 'jpg', 'jpeg'], $filename);
+
+                $params["logo"] = $uplodedFilename;
+
+                if ($repository->setLogo($params)) {
+                    return $this->jsonResponse($response, "success", "Logo mise à jour avec succès", 200);
+                } else {
+                    throw new SettingsException("Chargement du logo échoué.", 400);
+                }
+            } else {
+                throw new SettingsException("Erreur de chargement du fichier.", 400);
+            }
+        } catch (SettingsException $exception) {
+            throw $exception;
+        }
+    }
+
+    
 
     /**
      * @param $params

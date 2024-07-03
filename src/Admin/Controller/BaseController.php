@@ -8,6 +8,7 @@ use App\Admin\Repository\BaseRepository;
 use Exception;
 use Respect\Validation\Validator;
 use Slim\Container;
+use Slim\Http\Request;
 use Slim\Http\Response;
 use Slim\Http\UploadedFile;
 
@@ -122,7 +123,12 @@ abstract class BaseController
     {
         $extension = pathinfo($uploadedFile->getClientFilename(), PATHINFO_EXTENSION);
         if (!empty($inspectedExtensions) &&!in_array($extension, $inspectedExtensions)) {
-            throw new Exception('Extension du fichier incorrect.', 400);
+            $format = implode(',',array_fill(0,count($inspectedExtensions),'%s'));
+            $exensions = vsprintf($format,$inspectedExtensions);
+            $article = count($inspectedExtensions)>0 ?"Seules les extensions": "Seule l'extension";
+            $pluriel = count($inspectedExtensions)>0 ?" sont autorisées": " est autorisée";
+            $message = $article. "(".$exensions.")".$pluriel;
+            throw new Exception("Extension du fichier incorrect. $message", 400);
         }
         $basename = pathinfo($uploadedFile->getClientFilename(), PATHINFO_FILENAME); 
         $filename = $customName?sprintf('%s.%0.8s', $customName, $extension):sprintf('%s.%0.8s', $basename, $extension) ;
@@ -147,5 +153,24 @@ abstract class BaseController
             throw $exception;
         }
         return $link;
+    }
+
+
+    public function getImage(Request $request, Response $response, array $args): Response
+    {
+        $filename = $args['filename'];
+        $filepath = __DIR__ . '/../../../public/assets/images/' . $filename;
+        $defaultPath = __DIR__ . '/../../../public/assets/images/default.png';
+        if (!file_exists($filepath)) {
+            $image = file_get_contents($defaultPath);
+            $mimeType = mime_content_type($defaultPath);
+        }else{
+            $image = file_get_contents($filepath);
+            $mimeType = mime_content_type($filepath);
+        }
+
+        // Retourner l'image avec le bon type MIME
+        $response->getBody()->write($image);
+        return $response->withHeader('Content-Type', $mimeType);
     }
 }

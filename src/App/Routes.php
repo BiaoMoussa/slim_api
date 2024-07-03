@@ -106,6 +106,14 @@ $app->get('/communes', "App\Admin\Controller\PharmacieController:getCommunes");
  $app->get('/plateformInfo', "App\Admin\Controller\SettingsController:findForPublic");
 
 
+ /**
+ * Informations de la plateforme
+ *
+ */
+
+ $app->get('/logo/{filename}', "App\Admin\Controller\SettingsController:getImage");
+
+
 
 
 
@@ -196,6 +204,7 @@ $app->group('/v1/admin', function () use ($app): void {
     $app->group('/settings', function () use ($app): void {
         $app->get('', "App\Admin\Controller\SettingsController:find");
         $app->put('', "App\Admin\Controller\SettingsController:update");
+        $app->post('/loadLogo', "App\Admin\Controller\SettingsController:loadLogo");
     })->add(new Auth);
     
 

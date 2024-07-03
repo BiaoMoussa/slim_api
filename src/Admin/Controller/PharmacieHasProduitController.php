@@ -147,7 +147,7 @@ class PharmacieHasProduitController extends BaseController
             throw $exception;
         }
     }
-
+    
     public function update(Request $request, Response $response, array $args): Response
     {
         // Contrôle d'accès à la pharmacie

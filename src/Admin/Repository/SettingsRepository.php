@@ -114,6 +114,30 @@ class SettingsRepository  extends BaseRepository
         }
     }
 
+
+    public function setLogo($params=['logo' => "logo"])
+    {
+        try {
+            $updateParams = [];
+            $config = $this->find();
+            $old_app_name = $config['app_name'];
+            // Mise à jour des champs
+            $updateParams["app_logo"] = $params["logo"];
+            $updateParams["updated_by"] = $params["updated_by"] ?? $config["updated_by"];
+
+            $UPDATE_QUERY = "UPDATE parametres 
+            SET app_logo =:app_logo,
+            updated_by =:updated_by
+            WHERE app_name ='$old_app_name'";
+            $this->database->prepare($UPDATE_QUERY)->execute($updateParams);
+            return $this->find();
+        } catch (SettingsException $exception) {
+            throw $exception;
+        } catch (PDOException $exception) {
+            throw $exception;
+        }
+    }
+
     public function exists($critere = 'true'): bool
     {
         return true;
