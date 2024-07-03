@@ -19,6 +19,7 @@ final class DefaultController extends BaseController
         $message = [
             'Bienvenue' => "Bienvenue sur INNAMAGANI",
             "informations"=> $appInformations,
+            "api_domain"=>$url,
             'version' => self::API_VERSION,
             'timestamp' => time(),
         ];
