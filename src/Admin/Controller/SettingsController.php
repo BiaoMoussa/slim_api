@@ -117,10 +117,12 @@ class SettingsController extends BaseController
         $repository = new SettingsRepository();
          
         $request->getParsedBody();
+        $app = $this->container->get('settings')['app'];
+        $url = $app['domain'];
         $params = [];
         $params["updated_by"] = $params["userLogged"]["user"]->id ?? null;
 
-        $directory = $filepath = __DIR__ . '/../../../public/assets/images/' ;
+        $directory =  __DIR__ . '/../../../public/assets/images/' ;
 
         $uploadedFiles = $request->getUploadedFiles();
 
@@ -145,7 +147,7 @@ class SettingsController extends BaseController
                 // Upload du fichier
                 $uplodedFilename = $this->moveUploadedFile($directory, $uploadedFile, ['png', 'jpg', 'jpeg'], $filename);
 
-                $params["logo"] = $uplodedFilename;
+                $params["logo"] = $url."/logo/". $uplodedFilename;
 
                 if ($repository->setLogo($params)) {
                     return $this->jsonResponse($response, "success", "Logo mise à jour avec succès", 200);
