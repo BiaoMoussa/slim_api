@@ -132,5 +132,20 @@ abstract class BaseController
         return $filename;
     }
 
-    
+    protected function validatePhoneNumber(string $phone, Exception $exception)
+    {
+        if (!preg_match('/^\+?[1-9]\d{1,14}$/', $phone)) {
+            throw $exception;
+        }
+        return $phone;
+    }
+
+    protected function validateSocialMediaLink(string $link, Exception $exception)
+    {
+        $pattern = '/https?:\/\/(?:www\.)?(facebook|twitter|instagram|linkedin|wa\.me|chat\.whatsapp)\.com\/[^\s]*/i';
+        if (!preg_match($pattern, $link)) {
+            throw $exception;
+        }
+        return $link;
+    }
 }

@@ -4,27 +4,21 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Admin\Repository\SettingsRepository;
 use Slim\Http\Request;
 use Slim\Http\Response;
 
 final class DefaultController extends BaseController
 {
-    private const API_VERSION = '2.14.0';
-
+    private const API_VERSION = '1.0';
     public function getHelp(Request $request, Response $response): Response
     {
         $app = $this->container->get('settings')['app'];
         $url = $app['domain'];
-        $endpoints = [
-            'tasks' => $url . '/api/v1/tasks',
-            'users' => $url . '/api/v1/users',
-            'notes' => $url . '/api/v1/notes',
-            'docs' => $url . '/docs/index.html',
-            'status' => $url . '/status',
-            'this help' => $url . '',
-        ];
+        $appInformations = (new SettingsRepository())->findForPublic();
         $message = [
-            'endpoints' => $endpoints,
+            'Bienvenue' => "Bienvenue sur INNAMAGANI",
+            "informations"=> $appInformations,
             'version' => self::API_VERSION,
             'timestamp' => time(),
         ];

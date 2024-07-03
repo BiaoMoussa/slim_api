@@ -98,7 +98,12 @@ $app->get('/produits', "App\Admin\Controller\ProduitController:getAll");
  */
 $app->get('/communes', "App\Admin\Controller\PharmacieController:getCommunes");
 
+/**
+ * Informations de la plateforme
+ *
+ */
 
+ $app->get('/plateformInfo', "App\Admin\Controller\SettingsController:findForPublic");
 
 
 
@@ -186,6 +191,13 @@ $app->group('/v1/admin', function () use ($app): void {
 
     // Les communes 
     $app->get('/communes', "App\Admin\Controller\PharmacieController:getCommunes");
+
+    // Paramètres
+    $app->group('/settings', function () use ($app): void {
+        $app->get('', "App\Admin\Controller\SettingsController:find");
+        $app->put('', "App\Admin\Controller\SettingsController:update");
+    })->add(new Auth);
+    
 
     $app->group('/actions', function () use ($app): void {
         $app->get('', "App\Admin\Controller\ActionController:getAll");
