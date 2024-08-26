@@ -118,6 +118,7 @@ class PharmacieHasProduitRepository extends BaseRepository
                     $QUERY = "INSERT INTO pharmacie_has_produits (id_produit, id_pharmacie, prix, created_by, created_at) VALUES( :id_produit, :id_pharmacie, :prix, :created_by, :created_at)";
 
                     $this->database->prepare($QUERY)->execute($data);
+                    $this->setIADataSets($id_pharmacie, $value["id_produit"], date("Y-m-d H:i:s"), 1);
                 }
             }
 
@@ -134,6 +135,10 @@ class PharmacieHasProduitRepository extends BaseRepository
         try {
             $this->database->beginTransaction();
 
+            $pharmacie_has_produit = $this->database
+                ->query("SELECT id_pharmacie, id_produit FROM pharmacie_has_produits WHERE id_pharmacie_has_produit=$pharmacie_has_produit")
+                ->fetch(PDO::FETCH_COLUMN);
+
             $data = [];
             $data['modified_at'] = $modified_at;
             $data['modified_by'] = $modified_by;
@@ -141,6 +146,7 @@ class PharmacieHasProduitRepository extends BaseRepository
 
             $QUERY = "UPDATE  pharmacie_has_produits php SET statut=:statut, modified_by=:modified_by, modified_at=:modified_at WHERE id_pharmacie_has_produit=$pharmacie_has_produit  AND $critere";
             $this->database->prepare($QUERY)->execute($data);
+            $this->setIADataSets($pharmacie_has_produit["id_pharmacie"], $pharmacie_has_produit["id_produit"], date("Y-m-d H:i:s"), $status);
             $this->database->commit();
             return $this->getOne($pharmacie_has_produit);;
         } catch (PharmacieHasProduitException $exception) {
@@ -157,6 +163,8 @@ class PharmacieHasProduitRepository extends BaseRepository
     {
         try {
             $this->database->beginTransaction();
+            // Prendre tous les produits
+            $produits = $this->database->query("SELECT id_produit FROM produits")->fetchAll(PDO::FETCH_COLUMN);
             $dataDispo = [];
             $dataDispo['modified_at'] = date('Y-m-d H:i:s');
             $dataDispo['modified_by'] = $modified_by;
@@ -164,6 +172,14 @@ class PharmacieHasProduitRepository extends BaseRepository
             $QUERY_DISPO = "UPDATE  pharmacie_has_produits php SET statut=1, modified_by=:modified_by,
                                        modified_at=:modified_at WHERE id_pharmacie=:id_pharmacie";
             $this->database->prepare($QUERY_DISPO)->execute($dataDispo);
+           
+            // Écriture dans les datasets
+            foreach ($produits as $produit) {
+                if (!in_array($produit, $idProduitsIndisponibles)) {
+                    $this->setIADataSets($idPharmacie, $produit, date("Y-m-d H:i:s"), 1);
+                }
+            }
+
             if (!empty($idProduitsIndisponibles)) {
                 $QUERY = "UPDATE  pharmacie_has_produits php SET statut=0, modified_by=:modified_by,
                                        modified_at=:modified_at WHERE id_pharmacie=:id_pharmacie  AND id_produit=:id_produit";
@@ -175,8 +191,8 @@ class PharmacieHasProduitRepository extends BaseRepository
                 foreach ($idProduitsIndisponibles as $produit) {
                     $data['id_produit'] = $produit;
                     $this->database->prepare($QUERY)->execute($data);
+                    $this->setIADataSets($idPharmacie, $produit, date("Y-m-d H:i:s"), 0);
                 }
-
             } else {
                 throw new PharmacieHasProduitException("Tous les produits sont disponibles.", 400);
             }
@@ -195,17 +211,17 @@ class PharmacieHasProduitRepository extends BaseRepository
     public function relationExists($idProduit, $pharmacie)
     {
         return $this->database
-                ->query("SELECT * FROM pharmacie_has_produits WHERE id_pharmacie='$pharmacie' AND id_produit='$idProduit'")
-                ->rowCount() > 0;
+            ->query("SELECT * FROM pharmacie_has_produits WHERE id_pharmacie='$pharmacie' AND id_produit='$idProduit'")
+            ->rowCount() > 0;
     }
 
     public function findPharmacieByCode($codePharmacie)
     {
         $pharmacie = $this->database
-                ->query("SELECT id_pharmacie,code_pharmacie FROM pharmacies WHERE code_pharmacie='$codePharmacie'")
-                ->fetch();
-        if(!$pharmacie){
-            throw new PharmacieHasProduitException("Pharmacie introuvale",404);
+            ->query("SELECT id_pharmacie,code_pharmacie FROM pharmacies WHERE code_pharmacie='$codePharmacie'")
+            ->fetch();
+        if (!$pharmacie) {
+            throw new PharmacieHasProduitException("Pharmacie introuvale", 404);
         }
         return $pharmacie;
     }
@@ -213,8 +229,8 @@ class PharmacieHasProduitRepository extends BaseRepository
     private function produitExists($produit)
     {
         $control_existence_produit = $this->database
-                ->query("SELECT * FROM produits WHERE id_produit='$produit'")
-                ->rowCount() > 0;
+            ->query("SELECT * FROM produits WHERE id_produit='$produit'")
+            ->rowCount() > 0;
         if (!$control_existence_produit) {
             throw new PharmacieHasProduitException("Le produit $produit n'existe pas.");
         }
@@ -223,10 +239,39 @@ class PharmacieHasProduitRepository extends BaseRepository
     private function pharmacieExists($pharmacie)
     {
         $control_existence_pharmacie = $this->database
-                ->query("SELECT * FROM pharmacies WHERE id_pharmacie='$pharmacie'")
-                ->rowCount() > 0;
+            ->query("SELECT * FROM pharmacies WHERE id_pharmacie='$pharmacie'")
+            ->rowCount() > 0;
         if (!$control_existence_pharmacie) {
             throw new PharmacieHasProduitException("La pharmacie $pharmacie n'existe pas.");
+        }
+    }
+
+
+    /**
+     * Écrire une ligne dans les dataSets
+     * @param mixed $idPharmacie
+     * @param mixed $idProduit
+     * @param mixed $dateDisponibilite
+     * @param mixed $disponibilite
+     * @return bool
+     */
+    private function setIADataSets($idPharmacie, $idProduit, $dateDisponibilite, $disponibilite)
+    {
+
+        try {
+            $dataSet = [
+                "id_pharmacie" => $idPharmacie,
+                "id_produit" => $idProduit,
+                "date_disponibilite" => $dateDisponibilite,
+                "disponibilite" => $disponibilite
+            ];
+            $QUERY = "INSERT INTO ia_datasets (id_pharmacie, id_produit, date_disponibilite, disponiblite)
+             VALUES(:id_pharmacie, :id_produit, :date_disponibilite, :disponibilite)";
+            $this->database->prepare($QUERY)->execute($dataSet);
+            return true;
+        } catch (PDOException $exception) {
+           
+            throw $exception;
         }
     }
 }
